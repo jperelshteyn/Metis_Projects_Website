@@ -1,0 +1,57 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<div>
+
+    <h1>do professional movie reviews matter?</h1>
+    <br/>
+    <h2>introduction</h2>
+    <p></p>
+    <h2>data sources</h2>
+    <div class="pure-g">
+        <div class="pure-u-1-2">
+            <img class="displayed" src="{{ url_for('static', filename = 'img/box-office-mojo-logo.png') }}" width="130"/>
+        </div>
+        <div class="pure-u-1-2">
+            <img class="displayed" src="{{ url_for('static', filename = 'img/metacritic_logo.png') }}"/>
+
+        </div>
+        </div>
+    <br/>
+        <div class="pure-g">
+        <div class="pure-u-1-2">
+            <p>Scraped movies from 1990 to 2014</p>
+        </div>
+        <div class="pure-u-1-2">
+            <p>Scraped all reviews</p>
+        </div>
+        </div>
+
+    <br/>
+    <h2>Data Selection</h2>
+    <label>BoxOfficeMojo.com</label>
+    <ul>
+        <li>Complete data N = 10,645</li>
+        <li>Movies opening on more than 1000 screens N = 3,294</li>
+    </ul>
+    <label>MetaCritic.com</label>
+    <ul>
+        <li>Complete data N = 7,215</li>
+    </ul>
+    <label>Combined dataset N = 2,121</label>
+    <br/>
+    <h2>Variables:</h2>
+    <div style="display: inline-block;">
+    <strong>Outcome:</strong><p> mean domestic gross per screen on opening weekend</p></div>
+    <strong>Predictor:</strong><p> MetaCritic score (some kind of aggregation of professional reviews</p>
+    <strong>Controls:</strong>
+<ul>
+    <li>Budget</li>
+    <li>Competition - number of movies coming out same weekend</li>
+    <li>Actor Recognition - sum of number of movies each actor starred in the previous year</li>
+    <li>MPAA Rating - R, PG-13, PG, G</li>
+    <li>Genre - aggregated into these categories: Action,  Adventure,  Animation, Comedy, Crime, Drama, Family, Horror, Musical, Romance, Sci-Fi, Thriller,  Western</li>
+</ul>
+
+</div>
+{% endblock %}
