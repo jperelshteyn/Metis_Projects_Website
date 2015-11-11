@@ -1,28 +1,28 @@
 {% extends "layout.html" %}
 {% block content %}
 
-<div>
+<div class="container-fluid">
 
     <h1>do professional movie reviews matter?</h1>
     <br/>
     <h2>introduction</h2>
     <p></p>
     <h2>data sources</h2>
-    <div class="pure-g">
-        <div class="pure-u-1-2">
+    <div class="row">
+        <div class="col-md-6">
             <img class="displayed" src="{{ url_for('static', filename = 'img/box-office-mojo-logo.png') }}" width="130"/>
         </div>
-        <div class="pure-u-1-2">
+        <div class="col-md-6">
             <img class="displayed" src="{{ url_for('static', filename = 'img/metacritic_logo.png') }}"/>
 
         </div>
         </div>
     <br/>
-        <div class="pure-g">
-        <div class="pure-u-1-2">
+        <div class="row">
+        <div class="col-md-6">
             <p>Scraped movies from 1990 to 2014</p>
         </div>
-        <div class="pure-u-1-2">
+        <div class="col-md-6">
             <p>Scraped all reviews</p>
         </div>
         </div>

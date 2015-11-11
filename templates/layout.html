@@ -2,31 +2,38 @@
 <html lang="en">
 <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8">
-    <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/pure-min.css" />
     <link rel="stylesheet" href="/static/css/main.css?q=1280549780"
    type="text/css" media="screen" charset="utf-8" />
+   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js" integrity="sha512-K1qjQ+NcF2TYO/eI3M6v8EiNYZfA95pQumfvcVrTHtwQVDG+aHRqLi/ETn2uB+1JqwYqVG3LIvdm9lj6imS/pQ==" crossorigin="anonymous"></script>
+   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" integrity="sha512-dTfge/zgoMYpP7QbHy4gWMEGsbsdZeCXz7irItjcC3sPUFtf0kuFbDz/ixG7ArTxmDjLXDmezHubeNikyKGVyQ==" crossorigin="anonymous">
+
     <title>Metis Projects</title>
+    <style>
+        .navbar-nav li {
+            font-size: 20px;
+        }
+        .navbar-header h2 {
+            margin-top: 0;
+        }
+    </style>
 </head>
 <body>
-<div class="pure-g">
-    <div class="sidebar pure-u-1-5" style="background-color: lightgray;">
-        <div class="header">
-        <h1 class="brand-title" style="text-align: right;">
-            METIS PROJECTS
-        </h1>
-            </div>
-    <div class="pure-menu custom-restricted-width">
-    <ul class="pure-menu-list" style="text-align: right;">
-        <li class="pure-menu-item"><a class="pure-menu-link" href="{{url_for('mta') }}">MTA</a></li>
-        <li class="pure-menu-item"><a class="pure-menu-link" href="{{url_for('movies') }}">Movies</a></li>
+<nav class="navbar navbar-inverse">
+    <div class="navbar-header">
+        <h2>METIS PROJECTS</h2>
+    </div>
+    <ul class="nav navbar-nav">
+        <li><a href="{{url_for('mta') }}">MTA</a></li>
+        <li><a href="{{url_for('movies') }}">Movies</a></li>
     </ul>
-        </div>
-        </div>
-    <div class="content pure-u-4-5">
-        <div style="padding-left: 3em;">
+</nav>
+<div id="content" class="container">
+
     {% block content %}
     {% endblock %}
-            </div>
+
+
     </div>
+
 </body>
 </html>
