@@ -1,0 +1,36 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<script type=text/javascript>
+  $(function() {
+    $('#btnPushMe').bind('click', function() {
+      $.getJSON($SCRIPT_ROOT + '/_ajax_handler', {
+        selection: $("#selector option:selected").html()
+      }, function(data) {
+        $("#result").text(data.result);
+      });
+      return false;
+    });
+  });
+</script>
+
+<div class="container-fluid">
+
+    <h1>twitter news</h1>
+    <br/>
+    <div class="row">
+        <div class="col-md-6">
+            <select id="selector" class="form-control">
+                {% for o in option_list %}
+                <option value="{{ o.id }}">{{ o.text }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2">
+            <input id="btnPushMe" type="submit" value="Push Me" class="btn btn-default"></input>
+        </div>
+        
+        <span id="result">?</span>
+    </div>
+</div>
+{% endblock %}
