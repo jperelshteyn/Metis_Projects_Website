@@ -21,3 +21,10 @@ path {
 .default option {
     font-style: italic;
 }
+
+.navbar-nav li {
+    font-size: 20px;
+}
+.navbar h2 {
+    margin-top: 0;
+}

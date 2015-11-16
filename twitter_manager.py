@@ -11,7 +11,10 @@ from numpy import mean
 from time import mktime
 from math import floor
 from bson.objectid import ObjectId
-
+import pymongo
+from dateutil.parser import parse
+from time import mktime
+import headline_manager
 
 def initialize_api():
     config = cnfg.load(".twitter_config")
@@ -21,17 +24,19 @@ def initialize_api():
     return api
 
     
-def query(sarg, news_id, max_tweets=10000, tweets_per_qry=100, max_id=-1L, since_id=None):
+def query(sarg, headline_id, max_tweets=10000, tweets_per_qry=100, max_id=-1L, since_id=None):
     api = initialize_api()
     tweet_count = 0
     client = MongoClient()
     db = client.twitter_news
     tweet_coll = db.tweets
-    saved_tweets = tweet_coll.find({'news_id': news_id})
+    saved_tweets = tweet_coll.find({'news_id': headline_id})
     saved_ids = {}
     if saved_tweets.count() > 0:
         saved_ids = {long(c[u'tweet_data'][u'id_str']) for c in saved_tweets}
         since_id = max(saved_ids)
+    else:
+        since_id = find_latest_tweet_id_before_headline(headline_id)
     while tweet_count < max_tweets:
         try:
             if (max_id <= 0):
@@ -54,7 +59,7 @@ def query(sarg, news_id, max_tweets=10000, tweets_per_qry=100, max_id=-1L, since
             for tweet in new_tweets:
                 if not long(tweet._json[u'id_str']) in saved_ids:
                     data = {}
-                    data['news_id'] = news_id
+                    data['news_id'] = headline_id
                     data['tweet_data'] = tweet._json
                     tweet_coll.insert(data)
             tweet_count += len(new_tweets)
@@ -81,8 +86,8 @@ def get_hourly_sentiment(news_id):
         text = tweet[u'tweet_data'][u'text']
         t_blob = tb(text)
         s = t_blob.sentiment
-        s_score = abs(s.polarity * s.subjectivity)
-        hours_since = int(floor((tweet_time - publish_time) / 3600))
+        s_score = abs(s.polarity) + abs(s.subjectivity)
+        hours_since = int(floor((tweet_time - publish_time) / 60))
         if hours_since > 0:
             s_list = hourly_sentiment.get(hours_since, [])
             s_list.append(s_score)
@@ -90,7 +95,20 @@ def get_hourly_sentiment(news_id):
     for hour in hourly_sentiment:
         json_dict = {'hour': hour, 'sentiment': mean(hourly_sentiment[hour])}
         hourly_sentiment_list.append(json_dict)
-    return sorted(hourly_sentiment_list, key=lambda x: x['hour']), tweets.count()
+    return sorted(hourly_sentiment_list, key=lambda x: x['hour']), tweets.count() 
+
+
+def find_latest_tweet_id_before_headline(headline_id):
+    headline = headline_manager.get_headline_by_id(headline_id)
+    h_time = headline['time']
+    client = MongoClient()
+    db = client.twitter_news
+    cursor = db.tweets.find().sort([('tweet_data.created_at', pymongo.DESCENDING)])
+    for tweet in cursor:
+        dt = parse(tweet[u'tweet_data'][u'created_at'])
+        tweet_time = mktime(dt.timetuple())
+        if tweet_time < h_time:
+            return tweet['tweet_data'][u'id']
 
 
 def is_retweet(tweet, headline):

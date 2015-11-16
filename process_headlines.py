@@ -125,20 +125,22 @@ def score_and_save_headlines():
     score_coll = db.headline_scores
     previous_headlines = get_previous_headlines(True)
     # collect saved scores
-    saved_scores = head_coll.find()
+    saved_scores = score_coll.find()
     if saved_scores.count() > 0:
         processed_headline_ids = {c[u'headline_id'] for c in saved_scores}
     for headline in previous_headlines:
         headline_id = headline[0]
         if headline_id not in processed_headline_ids:
+            print headline[1]
             headline_blob = blob_headline(headline[1])
             s = headline_blob.sentiment
-            s_score = abs(s.polarity * s.subjectivity)
+            s_score = abs(s.polarity) + abs(s.subjectivity)
             f_score = get_sargs(headline_blob)
-            head_coll.insert({'headline_id': headline_id, 
+            score_coll.insert({'headline_id': headline_id, 
                               'headline': headline[1], 
                               's_score': s_score, 
                               'f_score': f_score})
+
 
 
 def best_sarg(count=5): 

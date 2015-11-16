@@ -9,6 +9,7 @@ from nltk import wordnet
 import numpy as np
 from pymongo import MongoClient
 import time
+from bson.objectid import ObjectId
 
 
 lemma = wordnet.WordNetLemmatizer()
@@ -134,7 +135,7 @@ def score_and_save_headlines():
         if headline_id not in processed_headline_ids:
             headline_blob = blob_headline(headline[1])
             s = headline_blob.sentiment
-            s_score = abs(s.polarity * s.subjectivity)
+            s_score = abs(s.polarity) + abs(s.subjectivity)
             f_score = get_sargs(headline_blob)
             head_coll.insert({'headline_id': headline_id, 
                               'headline': headline[1], 
@@ -164,7 +165,6 @@ def get_sargs(headline_blob, cut_off=0.5):
     tfidf_scores = score_headline(headline_blob)
     word_tags = headline_blob.tags
     nouns = {word for word, tag in word_tags if tag in {u'NN', u'NNS'}}
-    print tfidf_scores
     if not cut_off:
         cut_off = np.mean([score for _, score in tfidf_scores])
     for word, score in tfidf_scores:
@@ -192,13 +192,13 @@ def read_headline_scores():
     
 
 def get_headlines_for_ddl():
-    one_day_ago = time.time() - 8640
+    one_day_ago = time.time() #- 8640
     one_week_ago = time.time() - 60480 
     client = MongoClient()
     db = client.twitter_news
     news_coll = db.news
     scores_coll = db.headline_scores
-    cursor = news_coll.find({"time": {"$gt": one_day_ago}, "time": {"$lt": one_week_ago}})
+    cursor = news_coll.find({"time": {"$gt": one_day_ago}})#, "time": {"$lt": one_week_ago}})
     headlines = []
     for item in cursor:
         h_id = item['_id']
@@ -206,14 +206,12 @@ def get_headlines_for_ddl():
         scores = scores_coll.find_one({'headline_id': h_id})
         if scores['s_score'] > 0 and len(scores['f_score']) > 1:
             headlines.append({'text': h_text, 'id': h_id})
-    return headlines 
+    return headlines
 
     
 def get_sargs_from_text(headline):
     h_blob = blob_headline(headline)
-    print 'before sargs'
     sargs = get_sargs(h_blob, None)
-    print sargs
     words = ' '.join([t[0] for t in sargs])
     return words
 
@@ -221,8 +219,14 @@ def get_sargs_from_text(headline):
 def get_s_score(headline):
     headline_blob = blob_headline(headline)
     s = headline_blob.sentiment
-    return abs(s.polarity * s.subjectivity)
+    return abs(s.polarity) + abs(s.subjectivity)
 
+
+def get_headline_by_id(headline_id):    
+    client = MongoClient()
+    db = client.twitter_news
+    news_coll = db.news
+    return db.news.find_one({u'_id': ObjectId(headline_id)})
 
 
 if __name__ == '__main__':

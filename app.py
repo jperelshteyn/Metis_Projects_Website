@@ -34,7 +34,6 @@ def twitter_news():
 
 @app.route('/_btnGetSargs_handler')
 def btnGetSargs_handler():
-    print 'here'
     h_id = request.args.get('id')
     h_text = request.args.get('text')
     if h_id and h_id != "0":
@@ -54,6 +53,8 @@ def btnQuery_handler():
         twitter_manager.query(sargs, h_id)
         # process twitter results
         hourly_sentiment, tweet_count = twitter_manager.get_hourly_sentiment(h_id)
+        print len(hourly_sentiment)
+        hourly_sentiment = hourly_sentiment[:500]
         headline_score = headline_manager.get_s_score(headline)
         return jsonify(result=hourly_sentiment, tweet_count=tweet_count, headline_score=headline_score)
 
