@@ -2,11 +2,11 @@ __author__ = 'jperelshteyn'
 
 from flask import Flask, render_template, request, redirect, url_for, abort, session, jsonify
 import process_headlines
-import time
 from pymongo import MongoClient
 import twitter_manager
 import headline_manager
 import os
+from time import strftime, gmtime, time
 
 
 app = Flask(__name__)
@@ -28,13 +28,13 @@ def movies():
 
 @app.route('/twitter_news', methods=["GET", "POST"])
 def twitter_news():
-    option_list = headline_manager.get_headlines_for_ddl()
-    return render_template('twitter_news.html', option_list=option_list)
+    dates = get_dates_for_ddl()
+    #option_list = headline_manager.get_headlines_for_ddl('Sat, Nov 14')
+    return render_template('twitter_news.html', dates=dates)
 
 
 @app.route('/_btnGetSargs_handler')
 def btnGetSargs_handler():
-    print 'here'
     h_id = request.args.get('id')
     h_text = request.args.get('text')
     if h_id and h_id != "0":
@@ -53,14 +53,32 @@ def btnQuery_handler():
         # query twitter
         twitter_manager.query(sargs, h_id)
         # process twitter results
-        hourly_sentiment, tweet_count = twitter_manager.get_hourly_sentiment(h_id)
+        sentiment, tweet_count, scale = twitter_manager.get_sentiment_over_time(h_id)
+        print len(sentiment)
         headline_score = headline_manager.get_s_score(headline)
-        return jsonify(result=hourly_sentiment, tweet_count=tweet_count, headline_score=headline_score)
+        return jsonify(result=sentiment, tweet_count=tweet_count, headline_score=headline_score, scale=scale)
+
+
+@app.route('/_ddlDates_handler')
+def ddlDates_handler():
+    selected_date = request.args.get('date')
+    headlines = headline_manager.get_headlines_for_ddl(selected_date)
+    print headlines
+    return jsonify(headlines=headlines)
 
 
 @app.context_processor
 def override_url_for():
     return dict(url_for=dated_url_for)
+
+
+def get_dates_for_ddl():
+    dates = []
+    current = gmtime()
+    for days_back in range(1, 8):
+        back_date = time() - days_back * 86400 
+        dates.append(strftime("%a, %b %d", gmtime(back_date)))
+    return dates
 
 
 def dated_url_for(endpoint, **values):

@@ -1,16 +1,44 @@
 {% extends "layout.html" %}
 {% block content %}
 
+
+
+
+
+
 <script type=text/javascript>
 
+
+
+  function dateSelected() {
+      var selectedDate = $("#ddlDates option:selected").val();
+      if (selectedDate != '0'){
+
+        $("#divQuery").hide();
+        var ddlHeadlines = $("#ddlHeadlines");
+
+        $.getJSON($SCRIPT_ROOT + '/_ddlDates_handler', {
+            date: selectedDate
+        }, function(data) {
+            ddlHeadlines.html('');
+
+            $.each(data.headlines, function(key, val){
+                ddlHeadlines.append('<option value="' + val.id + '">' + val.text + '</option>')
+            })
+        });
+
+      }
+    }
+ 
 
   $(function() {
     $('#btnGetSargs').bind('click', function() {
       $("#divD3").hide();
       $.getJSON($SCRIPT_ROOT + '/_btnGetSargs_handler', {
-        id: $("#selector option:selected").val(),
-        text: $("#selector option:selected").text()
+        id: $("#ddlHeadlines option:selected").val(),
+        text: $("#ddlHeadlines option:selected").text()
       }, function(data) {
+        $("#divQuery").show();
         $("#txtSargs").val(data.result);
       });
       return false;
@@ -20,12 +48,12 @@
   $(function() {
     $('#btnQuery').bind('click', function() {
       $.getJSON($SCRIPT_ROOT + '/_btnQuery_handler', {
-        id: $("#selector option:selected").val(),
+        id: $("#ddlHeadlines option:selected").val(),
         text: $("#txtSargs").val(),
-        headline: $("#selector option:selected").text()
+        headline: $("#ddlHeadlines option:selected").text()
       }, function(data) {
         //$("#result").text(data.result);
-        $("#tweet-count").text(data.tweet_count + " tweets analyzed")
+        $("#tweet-count").text("(" + data.tweet_count + " tweets analyzed)")
         makeGraph(data.result, data.headline_score);
       });
       return false;
@@ -54,9 +82,11 @@
 
     var yAxis = d3.svg.axis().scale(y).orient("left").ticks(5);
 
+
+
     // Define the line
     var valueline = d3.svg.line()
-        .x(function(d) { return x(d.hour); })
+        .x(function(d) { return x(d.time_period); })
         .y(function(d) { return y(d.sentiment); });
 
     // Adds the svg canvas
@@ -67,12 +97,14 @@
         .append("g")
             .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
+    // Derive coordinates for headline score
+    //var headline_score_y = y(headline_score);
 
-
-        // Scale the range of the data
-    x.domain(d3.extent(data, function(d) { return d.hour; }));
+    // Scale the range of the data
+    x.domain(d3.extent(data, function(d) { return d.time_period; }));
     y.domain([0, d3.max(data, function(d) { return d.sentiment; })]);
 
+    
 
     // Add the valueline path.
     svg.append("path")
@@ -110,8 +142,8 @@
         .attr("y1", y(headline_score))
         .attr("x2", width)
         .attr("y2", y(headline_score))
-        .attr("stroke-width", 1)
-        .attr("stroke", "black")
+        .attr("stroke-width", 2)
+        .attr("stroke", "maroon")
         .attr("stroke-dasharray", "10,10");
   }
 
@@ -122,12 +154,16 @@
     <h1>twitter news</h1>
     <br/>
     <div class="row">
-        <div class="col-md-6">
-            <select id="selector" class="form-control">
-                <option class="default" style="font-style:italic;" value="0"> < choose a news headline > </option>
-                {% for o in option_list %}
-                <option value="{{ o.id }}">{{ o.text }}</option>
+        <div class="col-md-2">
+            <select id="ddlDates" class="form-control" onchange="dateSelected();">
+                <option class="default" value="0"> < choose date > </option>
+                {% for d in dates %}
+                    <option value="{{ d }}">{{ d }}</option>
                 {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-6">
+            <select id="ddlHeadlines" class="form-control">
             </select>
         </div>
         <div class="col-md-2">
@@ -135,7 +171,7 @@
         </div>        
     </div>
     <br/>
-    <div class="row">
+    <div class="row" id="divQuery" style="display: none">
         <div class="col-md-6">
             <input type="text" id="txtSargs" class="form-control"></input>
         </div>
