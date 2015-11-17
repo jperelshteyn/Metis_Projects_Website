@@ -1,4 +1,4 @@
 import sys
-sys.path.insert(0, '/var/www/{metis_projects}')
+sys.path.insert(0, '/var/www/Metis_Projects_Website')
 
-from app import {app global variable in app.py} as application
+from app import app as application
