@@ -6,7 +6,7 @@ from nltk.corpus import stopwords
 from unicodedata import normalize
 from nltk import stem
 from nltk import wordnet
-import numpy as np
+from numpy import median
 from pymongo import MongoClient
 from bson.objectid import ObjectId
 from time import time
@@ -19,14 +19,6 @@ stop_words = set(stopwords.words('english'))
 stop_chars = {',', '.', '?', '!', ';', ':', "'", '"'}
 previous_headlines = None
 blob_list = []
-
-
-def main(arg):
-    if arg:
-        if arg[0] == '-score':
-            score_and_save_headlines()
-        if arg[0] == '-sarg':
-            return best_sarg()
 
 
 def tf(word, blob):
@@ -83,14 +75,6 @@ def get_previous_headlines(with_ids=False):
     return headlines
 
 
-def gen_previous_headline_words():
-    client = MongoClient()
-    db = client.twitter_news
-    news_coll = db.news
-    for item in news_coll.find():
-         yield split_headline(headline)
-
-
 def score_headline(headline_blob):
     global previous_headlines
     global blob_list
@@ -117,49 +101,6 @@ def u_to_a(u):
     elif type(u) is str:
         return u
 
-
-def score_and_save_headlines():
-    processed_headline_ids = {}
-    all_s_scores = []
-    all_f_scores = []
-    headline_scores = {}
-    client = MongoClient()
-    db = client.twitter_news
-    score_coll = db.headline_scores
-    previous_headlines = get_previous_headlines(True)
-    # collect saved scores
-    saved_scores = head_coll.find()
-    if saved_scores.count() > 0:
-        processed_headline_ids = {c[u'headline_id'] for c in saved_scores}
-    for headline in previous_headlines:
-        headline_id = headline[0]
-        if headline_id not in processed_headline_ids:
-            headline_blob = blob_headline(headline[1])
-            s = headline_blob.sentiment
-            s_score = abs(s.polarity) + abs(s.subjectivity)
-            f_score = get_sargs(headline_blob)
-            head_coll.insert({'headline_id': headline_id, 
-                              'headline': headline[1], 
-                              's_score': s_score, 
-                              'f_score': f_score})
-
-
-def best_sarg(count=5): 
-    best = []
-    headline_scores, all_s_scores, all_f_scores = read_headline_scores()
-    all_f_scores = [s for s in all_f_scores if not np.isnan(s)]
-    f_score_q90 = np.percentile(all_f_scores, 90)
-    headline_scores_items = sorted(headline_scores.items(), key=lambda x: x[1][0], reverse=True)
-    for headline, scores in headline_scores_items:
-        if get_mean_f(scores[1]) > f_score_q90:
-            best.append((headline, scores))
-        if len(best) == int(count):    
-            return best
-
-
-def get_mean_f(f_scores):
-    return np.mean([score for _, score in f_scores if not np.isnan(score)])
-    
     
 def get_sargs(headline_blob, cut_off=0.5):
     sargs = []
@@ -167,7 +108,7 @@ def get_sargs(headline_blob, cut_off=0.5):
     word_tags = headline_blob.tags
     nouns = {word for word, tag in word_tags if tag in {u'NN', u'NNS'}}
     if not cut_off:
-        cut_off = np.mean([score for _, score in tfidf_scores])
+        cut_off = median([score for _, score in tfidf_scores])
     for word, score in tfidf_scores:
         if score > cut_off and word in nouns:
             sargs.append((word, score))
@@ -176,20 +117,6 @@ def get_sargs(headline_blob, cut_off=0.5):
             if score > cut_off:
                 sargs.append((word, score))        
     return sargs  
-
-
-def read_headline_scores():
-    client = MongoClient()
-    db = client.twitter_news
-    head_coll = db.headline_scores
-    all_s_scores = []
-    all_f_scores = []
-    headline_scores = {}
-    for item in head_coll.find():
-        headline_scores[item['headline']] = (item['s_score'], item['f_score'])
-        all_s_scores.append(item['s_score'])
-        all_f_scores.append(np.mean([score for _, score in item['f_score']]))
-    return headline_scores, all_s_scores, all_f_scores
     
 
 def dt_to_epoch(dt):
@@ -225,7 +152,7 @@ def get_sargs_from_text(headline):
 def get_s_score(headline):
     headline_blob = blob_headline(headline)
     s = headline_blob.sentiment
-    return abs(s.polarity) + abs(s.subjectivity)
+    return abs(s.polarity)
 
 
 def get_headline_by_id(headline_id):    
@@ -233,7 +160,3 @@ def get_headline_by_id(headline_id):
     db = client.twitter_news
     news_coll = db.news
     return db.news.find_one({u'_id': ObjectId(headline_id)})
-
-
-if __name__ == '__main__':
-    main(sys.argv[1:])

@@ -16,6 +16,7 @@ from dateutil.parser import parse
 from time import mktime
 import headline_manager
 
+
 def initialize_api():
     config = cnfg.load(".twitter_config")
     auth = OAuthHandler(config["consumer_key"], config["consumer_secret"])
@@ -79,17 +80,17 @@ def get_sentiment_over_time(news_id):
     tweets = db.tweets.find({u'news_id': news_id})
     headline = db.news.find_one({u'_id': ObjectId(news_id)})
     publish_time = headline[u'time']
+    headline_text = headline['headline']
     scale, denominator = get_time_scale(tweets)
     tweets = db.tweets.find({u'news_id': news_id})
     for tweet in tweets:
         tweet_time = get_tweet_time(tweet)
-        text = tweet[u'tweet_data'][u'text']
-        t_blob = tb(text)
-        s = t_blob.sentiment
-        s_score = abs(s.polarity)
+        tweet_text = tweet[u'tweet_data'][u'text']
         time_since = floor((tweet_time - publish_time) / denominator)
-        print time_since
-        if time_since > 0:
+        if time_since > 0 and not is_retweet(tweet_text, headline_text):
+            t_blob = tb(tweet_text)
+            s = t_blob.sentiment
+            s_score = abs(s.polarity)
             s_list = sentiment_by_time.get(time_since, [])
             s_list.append(s_score)
             sentiment_by_time[time_since] = s_list
