@@ -8,9 +8,10 @@ from nltk import stem
 from nltk import wordnet
 import numpy as np
 from pymongo import MongoClient
-import time
 from bson.objectid import ObjectId
-
+from time import time
+from dateutil.parser import parse
+from datetime import timedelta, datetime
 
 lemma = wordnet.WordNetLemmatizer()
 
@@ -191,21 +192,26 @@ def read_headline_scores():
     return headline_scores, all_s_scores, all_f_scores
     
 
-def get_headlines_for_ddl():
-    one_day_ago = time.time() #- 8640
-    one_week_ago = time.time() - 60480 
+def dt_to_epoch(dt):
+    return (dt - datetime(1970,1,1)).total_seconds()
+
+
+def get_headlines_for_ddl(dt_string):
+    dt = parse(dt_string)
+    start_day = dt_to_epoch(dt)
+    end_day = dt_to_epoch(dt + timedelta(days=1)) 
     client = MongoClient()
     db = client.twitter_news
     news_coll = db.news
-    scores_coll = db.headline_scores
-    cursor = news_coll.find({"time": {"$gt": one_day_ago}})#, "time": {"$lt": one_week_ago}})
+    cursor = news_coll.find({"$and":
+                             [ {"time": {"$gt": start_day}}, 
+                              {"time": {"$lt": end_day}}
+                             ]})
     headlines = []
     for item in cursor:
-        h_id = item['_id']
+        h_id = str(item['_id'])
         h_text = item['headline']
-        scores = scores_coll.find_one({'headline_id': h_id})
-        if scores['s_score'] > 0 and len(scores['f_score']) > 1:
-            headlines.append({'text': h_text, 'id': h_id})
+        headlines.append({'text': h_text, 'id': h_id})
     return headlines
 
     

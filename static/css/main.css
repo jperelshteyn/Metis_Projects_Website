@@ -28,3 +28,7 @@ path {
 .navbar h2 {
     margin-top: 0;
 }
+
+.navbar-header img {
+    max-height: 75px;
+}
