@@ -109,9 +109,7 @@ def get_sargs(headline_blob, cut_off=0.5):
     #nouns = {word for word, tag in word_tags if tag in {u'NN', u'NNS'}}
     if not cut_off:
         cut_off = median([score for _, score in tfidf_scores])
-        print cut_off
     for word, score in tfidf_scores:
-        print word, score
         if score >= cut_off: #and word in nouns:
             sargs.append((word, score))
     # if not sargs:
