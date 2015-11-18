@@ -1,13 +1,11 @@
 __author__ = 'jperelshteyn'
 
 from flask import Flask, render_template, request, redirect, url_for, abort, session, jsonify
-import process_headlines
 from pymongo import MongoClient
 import twitter_manager
 import headline_manager
 import os
 from time import strftime, gmtime, time
-
 
 app = Flask(__name__)
 
@@ -92,4 +90,4 @@ def dated_url_for(endpoint, **values):
 
 
 if __name__ == '__main__':
-	app.run(debug=False)
+	app.run(host='0.0.0.0', port=80)
