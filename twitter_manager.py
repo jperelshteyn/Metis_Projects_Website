@@ -75,6 +75,7 @@ def query(sarg, headline_id, max_tweets=10000, tweets_per_qry=100, max_id=-1L, s
 def get_sentiment_over_time(news_id):
     sentiment_by_time_list = []
     sentiment_by_time = {}
+    tweet_count = 0
     client = MongoClient()
     db = client.twitter_news
     tweets = db.tweets.find({u'news_id': news_id})
@@ -88,6 +89,7 @@ def get_sentiment_over_time(news_id):
         tweet_text = tweet[u'tweet_data'][u'text']
         time_since = floor((tweet_time - publish_time) / denominator)
         if time_since > 0 and not is_retweet(tweet_text, headline_text):
+            tweet_count += 1
             t_blob = tb(tweet_text)
             s = t_blob.sentiment
             s_score = abs(s.polarity)
@@ -99,7 +101,7 @@ def get_sentiment_over_time(news_id):
                      'sentiment': mean(sentiment_by_time[time_period])}
         sentiment_by_time_list.append(json_dict)
     sentiment_by_time_list = sorted(sentiment_by_time_list, key=lambda x: x['time_period'])
-    return sentiment_by_time_list, tweets.count(), scale
+    return sentiment_by_time_list, tweet_count, scale
 
 
 def get_time_scale(tweets):

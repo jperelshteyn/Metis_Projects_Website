@@ -27,7 +27,6 @@ def movies():
 @app.route('/twitter_news', methods=["GET", "POST"])
 def twitter_news():
     dates = get_dates_for_ddl()
-    #option_list = headline_manager.get_headlines_for_ddl('Sat, Nov 14')
     return render_template('twitter_news.html', dates=dates)
 
 
@@ -48,12 +47,10 @@ def btnQuery_handler():
     sargs = request.args.get('text')
     headline = request.args.get('headline')
     if h_id:
-    	print h_id
         # query twitter
         twitter_manager.query(sargs, h_id)
         # process twitter results
         sentiment, tweet_count, scale = twitter_manager.get_sentiment_over_time(h_id)
-        print len(sentiment)
         headline_score = headline_manager.get_s_score(headline)
         return jsonify(result=sentiment, tweet_count=tweet_count, headline_score=headline_score, scale=scale)
 
@@ -62,7 +59,6 @@ def btnQuery_handler():
 def ddlDates_handler():
     selected_date = request.args.get('date')
     headlines = headline_manager.get_headlines_for_ddl(selected_date)
-    print headlines
     return jsonify(headlines=headlines)
 
 
@@ -91,4 +87,5 @@ def dated_url_for(endpoint, **values):
 
 
 if __name__ == '__main__':
-	app.run(host='0.0.0.0', port=80)
+	#app.run(host='0.0.0.0', port=80)
+    app.run(debug=True)
