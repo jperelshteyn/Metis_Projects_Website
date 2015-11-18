@@ -7,6 +7,7 @@ import headline_manager
 import os
 from time import strftime, gmtime, time
 
+
 app = Flask(__name__)
 
 @app.route('/')
@@ -87,5 +88,5 @@ def dated_url_for(endpoint, **values):
 
 
 if __name__ == '__main__':
-	#app.run(host='0.0.0.0', port=80)
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=80)
+    #app.run(debug=True)
