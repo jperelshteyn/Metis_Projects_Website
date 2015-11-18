@@ -40,6 +40,7 @@ def btnGetSargs_handler():
     if h_id and h_id != "0":
         # get sargs
         sargs = headline_manager.get_sargs_from_text(h_text)
+        print sargs
         return jsonify(result=sargs)
 
 

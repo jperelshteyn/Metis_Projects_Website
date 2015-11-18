@@ -94,13 +94,11 @@ def get_sentiment_over_time(news_id):
             s_list = sentiment_by_time.get(time_since, [])
             s_list.append(s_score)
             sentiment_by_time[time_since] = s_list
-    print sentiment_by_time
     for time_period in sentiment_by_time:
         json_dict = {'time_period': time_period, 
                      'sentiment': mean(sentiment_by_time[time_period])}
         sentiment_by_time_list.append(json_dict)
     sentiment_by_time_list = sorted(sentiment_by_time_list, key=lambda x: x['time_period'])
-    print sentiment_by_time_list
     return sentiment_by_time_list, tweets.count(), scale
 
 
