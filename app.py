@@ -49,8 +49,9 @@ def btnQuery_handler():
         # query twitter
         twitter_manager.query(sargs, h_id)
         # process twitter results
-        sentiment, tweet_count, scale = twitter_manager.get_sentiment_over_time(h_id)
+        sentiment, tweet_count, scale = twitter_manager.get_sentiment_over_time(h_id, sargs)
         headline_score = headline_manager.get_s_score(headline)
+        print sentiment
         return jsonify(result=sentiment, tweet_count=tweet_count, headline_score=headline_score, scale=scale)
 
 
