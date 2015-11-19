@@ -5,15 +5,22 @@
 
 
 
-
 <script type=text/javascript>
 
-
+  function showWaiting(show){
+    if (show){
+        $('#divWaiting').show();
+    } else {
+        $('#divWaiting').hide();
+    }
+    
+  }
 
   function dateSelected() {
       var selectedDate = $("#ddlDates option:selected").val();
       if (selectedDate != '0'){
 
+        $('#no-tweets').hide();
         $("#divQuery").hide();
         var ddlHeadlines = $("#ddlHeadlines");
 
@@ -34,12 +41,14 @@
   $(function() {
     $('#btnGetSargs').bind('click', function() {
       $("#divD3").hide();
+      showWaiting(true);
       $.getJSON($SCRIPT_ROOT + '/_btnGetSargs_handler', {
         id: $("#ddlHeadlines option:selected").val(),
         text: $("#ddlHeadlines option:selected").text()
       }, function(data) {
         $("#divQuery").show();
         $("#txtSargs").val(data.result);
+        showWaiting(false);
       });
       return false;
     });
@@ -47,14 +56,20 @@
 
   $(function() {
     $('#btnQuery').bind('click', function() {
+      showWaiting(true);
+      $('#no-tweets').hide();
       $.getJSON($SCRIPT_ROOT + '/_btnQuery_handler', {
         id: $("#ddlHeadlines option:selected").val(),
         text: $("#txtSargs").val(),
         headline: $("#ddlHeadlines option:selected").text()
       }, function(data) {
-        //$("#result").text(data.result);
-        $("#tweet-count").text("(" + data.tweet_count + " tweets analyzed)")
-        makeGraph(data.result, data.headline_score, data.scale);
+        showWaiting(false);
+        if (data.result){
+            $("#tweet-count").text("(" + data.tweet_count + " tweets analyzed)")
+            makeGraph(data.result, data.headline_score, data.scale);
+        } else {
+            $('#no-tweets').show();
+        }
       });
       return false;
     });
@@ -65,6 +80,9 @@
 
     $("#divD3").show();
     $("#d3-canvas").empty();
+
+    var hasNegSentiment = Math.min.apply(Math, data.map(function(d){return d.sentiment;})) < 0;
+    var minX = Math.min.apply(Math, data.map(function(d){return d.time_period;}))
 
     // Set the dimensions of the canvas / graph
     var margin = {top: 30, right: 20, bottom: 30, left: 50},
@@ -100,11 +118,10 @@
 
     // Scale the range of the data
     x.domain(d3.extent(data, function(d) { return d.time_period; }));
-    y.domain([0, d3.max(data, function(d) { return d.sentiment; })]);
+    y.domain(d3.extent(data, function(d) { return d.sentiment; }));
 
     // Adjust graph title
-    var title = $('#graph-title');
-    title.text(title.text() + ' (by ' + scale.slice(0, -1) + ')');
+    $('#graph-title').text('average twitter sentiment since news hit (by ' + scale.slice(0, -1) + ')');
 
     // Add the valueline path.
     svg.append("path")
@@ -135,16 +152,26 @@
         .attr("y", 6)
         .attr("dy", "1em")
         .attr("transform", "rotate(-90)")
-        .text("sentiment and subjectivity");
+        .text("sentiment");
 
     svg.append("line")
-        .attr("x1", 0)
+        .attr("x1", x(minX))
         .attr("y1", y(headline_score))
         .attr("x2", width)
         .attr("y2", y(headline_score))
         .attr("stroke-width", 2)
         .attr("stroke", "maroon")
         .attr("stroke-dasharray", "10,10");
+
+    if (hasNegSentiment){
+        svg.append("line")
+            .attr("x1", x(minX))
+            .attr("y1", y(0))
+            .attr("x2", width)
+            .attr("y2", y(0))
+            .attr("stroke-width", 1)
+            .attr("stroke", "grey");
+    }
   }
 
 </script>
@@ -180,14 +207,18 @@
         </div>         
     </div>
     <br/>
+    <h4 id="no-tweets" style="display: none">No tweets matched the search</h4>
     <div id="divD3" style="display: none">
         <div class="row">
             <div class="col-md-offset-1 col-md-11">
-                <h3 id="graph-title">average twitter sentiment since news hit</h3>
+                <h3 id="graph-title"></h3>
                 <h5 id="tweet-count"></h5>
             </div>    
         </div>
         <div id="d3-canvas"></div>
+    </div>
+    <div id="divWaiting" class="content-center" style="display: none">
+        <img src="../static/img/waiting.gif" id="imgWaiting"></img>
     </div>
 </div>
 {% endblock %}
