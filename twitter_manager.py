@@ -22,6 +22,9 @@ db = client.twitter_news
 
 
 def initialize_api():
+    '''
+    Return tweepy api object loaded with twitter keys and tokens
+    '''
     config = cnfg.load(".twitter_config")
     auth = OAuthHandler(config["consumer_key"], config["consumer_secret"])
     auth.set_access_token(config["access_token"], config["access_token_secret"])
@@ -30,11 +33,23 @@ def initialize_api():
 
     
 def query(sarg, headline_id, max_tweets=10000, tweets_per_qry=100, max_id=-1L, since_id=None):
+    '''
+    Query twitter continuously with sargs and save to database
+
+    Args:
+        sarg(str) -- query search terms
+        headline_id(str) --  foreign key to the news collection
+        max_tweets(int) -- maximum number of tweets to collect
+        tweets_per_qry(int) -- maximum number of tweets per request
+        max_id(long) -- top id in range of tweets to be collected (for windowing the requests)
+        since_id(long) -- bottom id in range of tweets to be collected (comes from local db)
+    '''
     api = initialize_api()
     tweet_count = 0
     client = MongoClient()
     db = client.twitter_news
     tweet_coll = db.tweets
+    # get tweets from db and figure out the starting id for new twitter query
     saved_tweets = tweet_coll.find({'$and' :[{'news_id': headline_id}, {'sarg': sarg}]})
     saved_ids = {}
     if saved_tweets.count() > 0:
@@ -42,6 +57,7 @@ def query(sarg, headline_id, max_tweets=10000, tweets_per_qry=100, max_id=-1L, s
         since_id = max(saved_ids)
     else:
         since_id = find_latest_tweet_id_before_headline(headline_id)
+    # request tweets until max is reached or sarg is exhausted
     while tweet_count < max_tweets:
         try:
             if (max_id <= 0):
