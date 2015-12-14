@@ -130,3 +130,15 @@ path {
 .gist {
   font-size: 14px;
 }
+
+.recipe li {
+  margin-left: 10px;
+}
+
+.recipe h4, a {
+  color: #323232 !important;
+}
+
+/*span.glyphicon {
+    font-size: 1.2em;
+}*/

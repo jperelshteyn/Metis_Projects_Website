@@ -6,6 +6,8 @@ import twitter_manager
 import headline_manager
 import os
 from time import strftime, gmtime, time
+import recipe_search
+
 
 app = Flask(__name__)
 
@@ -88,11 +90,17 @@ def dated_url_for(endpoint, **values):
 
 @app.route('/_get_ingredients')
 def get_ingredients():
-    client = MongoClient()
-    db = client.recipes
-    ingr_coll = db.ingredients
-    ingr_list = [i['name'] for i in ingr_coll.find()]
-    return jsonify(ingredients=ingr_list)
+    ingredients = recipe_search.get_ingredient_names()
+    return jsonify(ingredients=ingredients)
+
+
+@app.route('/_btnSearch_handler')
+def btnSearch_handler():
+    ingredients_csv = request.args.get('ingredients_csv')
+    text_sarg = request.args.get('text_sarg')
+    recipes = recipe_search.search(ingredients_csv, text_sarg)
+    scored_recipes = recipe_search.sort_score_recipes(recipes)
+    return jsonify(recipes=scored_recipes)
 
 
 @app.context_processor
