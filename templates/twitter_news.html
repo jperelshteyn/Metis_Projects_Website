@@ -143,7 +143,7 @@
         .attr("class", "x label")
         .attr("text-anchor", "end")
         .attr("x", width)
-        .attr("y", height - 6)
+        .attr("y", height + ((headline_score==0) ? 9 : -6))
         .text(scale + " since the news");
 
     svg.append("text")
@@ -162,6 +162,13 @@
         .attr("stroke-width", 2)
         .attr("stroke", "maroon")
         .attr("stroke-dasharray", "10,10");
+
+    svg.append("text")
+        .attr("x", width - 100)
+        .attr("y", y(headline_score) - 5)
+        .attr("class", "x label")
+        .text("headline sentiment")
+        .attr("fill", "maroon");
 
     if (hasNegSentiment){
         svg.append("line")

@@ -1,0 +1,254 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<script>
+
+    recipes = [];
+
+    colors = d3.scale.category10();
+
+    function showWaiting(show){
+        if (show){
+            $('#divWaiting').show();
+        } else {
+            $('#divWaiting').hide();
+        }
+    }
+
+    var substringMatcher = function(strs) {
+      return function findMatches(q, cb) {
+        var matches, substringRegex;
+
+        // an array that will be populated with substring matches
+        matches = [];
+
+        // regex used to determine if a string contains the substring `q`
+        substrRegex = new RegExp(q, 'i');
+
+        // iterate through the pool of strings and for any string that
+        // contains the substring `q`, add it to the `matches` array
+        $.each(strs, function(i, str) {
+          if (substrRegex.test(str)) {
+            matches.push(str);
+          }
+        });
+
+        cb(matches);
+      };
+    };
+
+    $("#ingredient-input .btn").click(function(){
+        addIngredient();
+    });
+
+    function showDescription(){
+
+    }
+
+    function deleteIngredient(sender) {
+        var li = $(sender).closest("li");
+        li.remove();
+    }
+
+    function clearIngredientInput() {
+        $("#ingredient-input .typeahead").val('');
+    }
+
+    var ingredientItem = function(name){
+        return ["<li><div class='col-md-10'>"+name+"</div><div class='col-md-2'>",
+               "<button type='button' class='close' aria-label='Close' onclick='deleteIngredient(this)'>",
+               "<span aria-hidden='true'>&times;</span>",
+               "</button></div></li>"].join('\n');
+    }
+
+    function addIngredient(obj){
+        var text = obj.currentTarget.value;
+        var ingrList = $("#ingredient-list ul");
+        var isNewList = (ingrList.find("li").length == 0)
+        var isInList = ($("#ingredient-list:contains('"+text+"')").length > 0);
+        var li = ingredientItem(text);
+        if (!isInList && !isNewList) {
+            ingrList.append(li);
+        } else if (isNewList){
+            $("#ingredient-list ul").html(li);
+        }
+        //$("#ingredient-input .typeahead").('setQuery', '');
+        $('.typeahead').typeahead('val', '');
+        return false;
+    }
+
+    function clusterSelected() {
+        var clusterID = $('#cluster-selector').val();
+        makeRecipeGrid(cluster_id=clusterID);
+        // $('.recipe').each(function(i, div){
+        //     div.hidden = (clusterID != -1 && div.getAttribute('data-cluster') != clusterID);
+        // });
+    }
+
+    function changeGenre(a) {
+        var newGenre = $(a).text();
+        var currentGenre = $("#current-selection").text();
+        $(a).text(currentGenre);
+        $("#current-selection").text(newGenre);
+        makeRecipeGrid(newGenre);
+    }
+
+    $(function(){
+        $.getJSON($SCRIPT_ROOT + '/_get_ingredients', {}, 
+            function(data) {
+                $("#ingredient-input .typeahead")
+                    .typeahead({
+                        hint: true,
+                        highlight: true,
+                        minLength: 1
+                    },
+                    {
+                        name: 'ingredients',
+                        source: substringMatcher(data.ingredients)
+                    })
+                    .on("typeahead:selected", function(obj) {addIngredient(obj);});
+        });
+    });
+
+    function getIngredients() {
+        var ingredients_csv = '';
+        $('#ingredient-list li').each( function(){
+            ingredients_csv += $(this).text().slice(0,-1) + ',';
+        });
+        return ingredients_csv.slice(0,-1);
+    }
+
+    $(function() {
+        $('#btnSearch').bind('click', function() {
+            showWaiting(true);
+          $.getJSON($SCRIPT_ROOT + '/_btnSearch_handler', {
+            ingredients_csv: getIngredients(),
+            text_sarg: $("#txtTextSarg").text()
+          }, function(data) {
+            recipes = data.recipes;
+            var currentGenre = $("#current-selection").text();
+            makeRecipeGrid(currentGenre);
+            //loadClusterSelector(data.clusters);
+            showWaiting(false);
+          });
+          return false;
+        });
+      });
+
+    function reset() {
+        $('#txtTextSarg').val(null);
+        $("#ingredient-list ul").empty();
+        $('#recipe-grid').empty();
+        $('#recipe-clusters').hide();
+    }
+
+    function makeRecipeGrid(sort_genre) {
+        $('#recipe-grid').empty();
+        // recipes
+        //     .filter(function(item) {
+        //         return cluster_id == -1 || item.cluster_id == cluster_id; 
+        //     })
+        recipes.sort(function(current, next) {
+            return next.sort_scores[sort_genre] - current.sort_scores[sort_genre] ;
+        });
+        recipes.forEach(function(item, ind) {
+                if (ind % 4 == 0) {$('#recipe-grid').append('<div class="row">');}
+                $('#recipe-grid').append(recipeItem(item.recipe, ind, item.cluster_id));
+                if (ind != 0 && ind % 3 == 0) {$('#recipe-grid').append('</div>');}
+                //$('#recipe-descriptions').append(recipeDescrption(item.recipe, ind));
+            });
+    }
+
+    function loadClusterSelector(clusters) {
+        $('#recipe-clusters').show();
+        clusters.forEach(function(item, ind) {
+            $('#cluster-selector')
+                .append($("<li></li>")
+                    .css("display", "block")
+                    .append($("<span></span>")
+                        .addClass("glyphicon glyphicon-tags")
+                        .css("color", colors(ind)))                    
+                    .append($("<a></a>")
+                        .attr("value", item.id)
+                        .attr("href", "#")
+                        .text(item.name))
+                );
+        });
+    }
+
+    var recipeItem = function(recipe, ind, cluster_id) {
+        return ['<div class="recipe col-md-3" data-cluster="'+cluster_id+'" id="'+
+                    ind+'" onmouseover="showDescription(this);">',
+                '<h4><a href="'+recipe.url+'" target="_blank">'+recipe.name+'</a></h4>',
+                '<ul class="list-unstyled ingredients">',
+                '<li>'+recipe.raw_ingredients.join('</li><li>')+'</li>',
+                '</ul>',
+                '<a href="http://www.'+recipe.source+'.com" target="_blank">',
+                '<img alt="'+recipe.source+'" width="70px" class="img-responsive" src="../static/img/'+recipe.source+'.png">',
+                '</img></a></div>'].join('\n');
+    }
+
+    var recipeDescrption = function(recipe, ind) {
+        return '<span hidden="True" id="'+ind+'">'+recipe.description+'</span>';
+    }
+</script>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-3">
+            <div id="ingredient-input">
+                <input class="typeahead form-control" type="text" placeholder="ingredients"></input>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div id="ingredient-list">
+                <ul class="list-unstyled">
+                </ul>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <input type="text" id="txtTextSarg" class="form-control" placeholder="dish name"></input>
+        </div>  
+        <div class="col-md-3">
+            <div class="dropdown">        
+                <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" 
+                        aria-haspopup="true" aria-expanded="true">
+                    <span id="current-selection">Silence</span>
+                    <span class="caret"></span>
+                </button>
+                <ul id="genre-selector" class="dropdown-menu" aria-labelledby="dropdownMenu1">
+                    <li><a onclick="changeGenre(this)" href="#">Classical</a></li>
+                    <li><a onclick="changeGenre(this)" href="#">Jazz</a></li>
+                    <li><a onclick="changeGenre(this)" href="#">Rock</a></li>
+                </ul>
+            </div>
+        </div>        
+    </div>
+    <br/>
+    <div class="row">
+        <div class="col-md-offset-7 col-md-1">
+            <input id="btnSearch" type="submit" value="Search" class="btn btn-primary"></input>
+        </div>
+        <div class="col-md-1">
+            <input id="btnReset" type="submit" value="Reset" class="btn btn-default" onclick="reset()"></input>
+        </div>
+    </div>
+    <hr/>
+    <div id="recipe-clusters" class="dropdown" style="display: none">        
+        <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" 
+                aria-haspopup="true" aria-expanded="true">
+            Clusters
+            <span class="caret"></span>
+        </button>
+        <ul id="cluster-selector" class="dropdown-menu" aria-labelledby="dropdownMenu1">
+            <li><a value="-1" href="#">all</a><span class="glyphicon glyphicon-tags"></span></li>
+        </ul>
+        <hr/>
+    </div>
+    <div id="recipe-grid">
+    </div>
+        <div id="divWaiting" class="content-center" style="display: none">
+        <img src="../static/img/waiting.gif" id="imgWaiting"></img>
+    </div>
+</div>
+{% endblock %}
