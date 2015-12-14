@@ -4,8 +4,7 @@ import cnfg
 import json
 from pymongo import MongoClient
 import traceback
-from sklearn.cluster import KMeans
-from sklearn.feature_extraction.text import TfidfVectorizer
+
 
 client = MongoClient()
 db = client.recipes
