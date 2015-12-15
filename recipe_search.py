@@ -429,14 +429,21 @@ def search(ingredients_csv, text_sarg, test=True, jsonify=False, limit=100):
 def sort_score_recipes(recipes):
     genres = get_genre_names()
     scored_recipes = []
+    recipe_id = 0
     for recipe in recipes:
+        recipe_id += 1
         sort_scores = {}
+        common_adjectives = {}
         genre_scores = recipe.get_genre_scores(genres)
         ingr_count = len(recipe.ingredients)
         for genre in genre_scores:
             sort_scores[genre] = sum(score for _, score in genre_scores[genre].items()) / ingr_count
+            common_adjectives[genre] = [adjective for adjective, _ in genre_scores[genre].items()]
         sort_scores['Silence'] = -sum(sort_scores.values())
-        scored_recipes.append({'recipe': recipe.for_web(), 'sort_scores': sort_scores})
+        scored_recipes.append({'recipe_id': recipe_id,
+                               'recipe': recipe.for_web(), 
+                               'sort_scores': sort_scores,
+                               'common_adjectives': common_adjectives})
     return scored_recipes
 
 
