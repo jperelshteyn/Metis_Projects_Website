@@ -41,8 +41,14 @@
         addIngredient();
     });
 
-    function showDescription(){
-
+    function showDescription(recipe_id) {
+        var currentGenre = $("#current-selection").text();
+        if (currentGenre != 'Silence') {
+            var recipe = $.grep(recipes, function(r) { 
+                                        return (r.recipe_id == recipe_id); }).pop();
+            var adjectives = recipe.common_adjectives[currentGenre];
+            $("#common-adjectives").text(adjectives.join(', '));
+        }
     }
 
     function deleteIngredient(sender) {
@@ -55,7 +61,7 @@
     }
 
     var ingredientItem = function(name){
-        return ["<li><div class='col-md-10'>"+name+"</div><div class='col-md-2'>",
+        return ["<li><div class='col-md-10 tt-suggestion'>"+name+"</div><div class='col-md-2'>",
                "<button type='button' class='close' aria-label='Close' onclick='deleteIngredient(this)'>",
                "<span aria-hidden='true'>&times;</span>",
                "</button></div></li>"].join('\n');
@@ -140,6 +146,7 @@
         $("#ingredient-list ul").empty();
         $('#recipe-grid').empty();
         $('#recipe-clusters').hide();
+        $('#common-adjectives').empty();
     }
 
     function makeRecipeGrid(sort_genre) {
@@ -153,7 +160,7 @@
         });
         recipes.forEach(function(item, ind) {
                 if (ind % 4 == 0) {$('#recipe-grid').append('<div class="row">');}
-                $('#recipe-grid').append(recipeItem(item.recipe, ind, item.cluster_id));
+                $('#recipe-grid').append(recipeItem(item.recipe, item.recipe_id));
                 if (ind != 0 && ind % 3 == 0) {$('#recipe-grid').append('</div>');}
                 //$('#recipe-descriptions').append(recipeDescrption(item.recipe, ind));
             });
@@ -176,16 +183,16 @@
         });
     }
 
-    var recipeItem = function(recipe, ind, cluster_id) {
-        return ['<div class="recipe col-md-3" data-cluster="'+cluster_id+'" id="'+
-                    ind+'" onmouseover="showDescription(this);">',
+    var recipeItem = function(recipe, recipe_id) {
+        return ['<div class="recipe col-md-3">',
                 '<h4><a href="'+recipe.url+'" target="_blank">'+recipe.name+'</a></h4>',
                 '<ul class="list-unstyled ingredients">',
                 '<li>'+recipe.raw_ingredients.join('</li><li>')+'</li>',
-                '</ul>',
+                '</ul><div class="content-center">',
+                '<input type="submit" value="show words" class="btn btn-default" onclick="showDescription('+recipe_id+');"/><br/><br/>',
                 '<a href="http://www.'+recipe.source+'.com" target="_blank">',
                 '<img alt="'+recipe.source+'" width="70px" class="img-responsive" src="../static/img/'+recipe.source+'.png">',
-                '</img></a></div>'].join('\n');
+                '</img></a></div></div>'].join('\n');
     }
 
     var recipeDescrption = function(recipe, ind) {
@@ -194,6 +201,15 @@
 </script>
 
 <div class="container-fluid">
+    <div class="row">
+        <div class="col-md-9">
+            <b>Recipe Search: </b>
+        </div>
+        <div class="col-md-3 verticalLine">
+            <b>Music Sort: </b>
+        </div>
+    </div>
+    <br/>
     <div class="row">
         <div class="col-md-3">
             <div id="ingredient-input">
@@ -207,9 +223,9 @@
             </div>
         </div>
         <div class="col-md-3">
-            <input type="text" id="txtTextSarg" class="form-control" placeholder="dish name"></input>
+            <input type="text" id="txtTextSarg" class="typeahead form-control" placeholder="dish name"></input>
         </div>  
-        <div class="col-md-3">
+        <div class="col-md-3 verticalLine">
             <div class="dropdown">        
                 <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" 
                         aria-haspopup="true" aria-expanded="true">
@@ -226,7 +242,7 @@
     </div>
     <br/>
     <div class="row">
-        <div class="col-md-offset-7 col-md-1">
+        <div class="col-md-offset-9 col-md-1">
             <input id="btnSearch" type="submit" value="Search" class="btn btn-primary"></input>
         </div>
         <div class="col-md-1">
@@ -234,6 +250,10 @@
         </div>
     </div>
     <hr/>
+    <div>
+        <span id="common-adjectives"></span>
+        <hr/>
+    </div>
     <div id="recipe-clusters" class="dropdown" style="display: none">        
         <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" 
                 aria-haspopup="true" aria-expanded="true">

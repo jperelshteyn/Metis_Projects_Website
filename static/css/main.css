@@ -142,3 +142,7 @@ path {
 /*span.glyphicon {
     font-size: 1.2em;
 }*/
+
+.verticalLine {
+    border-left: solid thin #000000;
+}
