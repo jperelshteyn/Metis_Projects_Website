@@ -329,18 +329,19 @@ def extract_ingredients(messy_ingredients):
     return pure_ingredients
 
 
-def query_edamam(q, count=100):
+
+def query_edamam(q, limit=50):
     recipes = []
     try:
         cred = 'app_id=' + config['edamam_id'] + '&app_key=' + config['edamam_key']
-        r_string = "https://api.edamam.com/search?{}&{}&{}".format("q=" + q, cred, "to=" + str(count))
+        r_string = "https://api.edamam.com/search?{}&{}&{}".format("q=" + q, cred, "to=" + str(limit))
         r = requests.get(r_string)
         for h in r.json()['hits']:
             name = h['recipe']['label']
             ingredients = [i['food'] for i in h['recipe']['ingredients']]
             url = h['recipe']['url']
             source = 'edamam'
-            recipe = Recipe(name, ingredients, url, source)
+            recipe = Recipe(name, ingredients, ingredients, url, source)
             recipes.append(recipe)
     except e as Exception:
         print 'edamam error', e
@@ -349,28 +350,30 @@ def query_edamam(q, count=100):
         return recipes
 
 
-def query_food2fork(q, skip_urls={}):
+def query_food2fork(q, limit=50):
     key = 'key=' + config['food2fork_key']
     page = 1
     more = True
     recipes = []
     try:
         while more:
-            get_string = "http://food2fork.com/api/search?{}&{}&{}".format("q=" + q,"page=" + str(page), key)
-            resp = requests.get(get_string)
+            get_url = "http://food2fork.com/api/search?{}&{}&{}".format("q=" + q,"page=" + str(page), key)
+            resp = requests.get(get_url)
             page += 1
             more = resp.json()['count'] == 30 and resp.status_code == 200
             for r in resp.json()['recipes']:
-                if r['source_url'] not in skip_urls:
-                    get_string = "http://food2fork.com/api/get?rId={}&{}".format(r['recipe_id'], key)
-                    resp2 = requests.get(get_string)
-                    data = resp2.json()
-                    name = data['recipe']['title']
-                    ingredients = extract_ingredients(data['recipe']['ingredients'])
-                    url = data['recipe']['source_url']
-                    source = 'food2fork'
-                    recipe = Recipe(name, ingredients, url, source)
-                    recipes.append(recipe)
+                get_url = "http://food2fork.com/api/get?rId={}&{}".format(r['recipe_id'], key)
+                resp2 = requests.get(get_url)
+                data = resp2.json()
+                name = data['recipe']['title']
+                raw_ingredients = data['recipe']['ingredients']
+                url = data['recipe']['source_url']
+                source = 'food2fork'
+                recipe = Recipe(name, raw_ingredients, [], url, source)
+                recipe.extract_ingredients()
+                recipes.append(recipe)
+                if len(recipes) == limit:
+                    return recipes
     except e as Exception:
         print 'food2fork error', e
         traceback.print_exc()
@@ -378,22 +381,24 @@ def query_food2fork(q, skip_urls={}):
         return recipes
 
 
-def query_yummly(q, ingredients):
+def query_yummly(q, ingredients, limit=50):
     ingr_list = ingredients.split(',') if ingredients else []
     recipes = []    
     try:
         cred = '_app_id=' + config['yummly_id'] + '&_app_key=' + config['yummly_key']
         ingr_string = ('allowedIngredient[]=' + '&allowedIngredient[]='.join(ingr_list)) if ingr_list else ''
         text_sarg = 'q=' + q if q else ''
-        r_string = "http://api.yummly.com/v1/api/recipes?{}&{}&{}".format(text_sarg, ingr_string, cred)
+        max_result = 'maxResult=' + str(limit)
+        r_string = "http://api.yummly.com/v1/api/recipes?{}&{}&{}&{}"\
+                        .format(text_sarg, ingr_string, cred, max_result)
         r = requests.get(r_string)
         for m in r.json()['matches']:
             name = m['recipeName']
-            print name
-            ingredients = extract_ingredients(m['ingredients'])
+            raw_ingredients = m['ingredients']
             url = 'http://www.yummly.com/recipe/external/' + m['id']
             source = 'yummly'
-            recipe = Recipe(name, ingredients, url, source)
+            recipe = Recipe(name, raw_ingredients, [], url, source)
+            recipe.extract_ingredients()
             recipes.append(recipe)
     except e as Exception:
         print 'yummly error', e
@@ -402,8 +407,7 @@ def query_yummly(q, ingredients):
         return recipes
 
 
-
-def search(ingredients_csv, text_sarg, test=True, jsonify=False, limit=100):
+def search(ingredients_csv, text_sarg, test=True, jsonify=False, limit=111):
     recipes = []
     count = 0
     if test:
@@ -417,8 +421,11 @@ def search(ingredients_csv, text_sarg, test=True, jsonify=False, limit=100):
         food2fork_sarg = text_sarg+'+'+ingredients_csv if text_sarg and ingredients_csv \
                                                         else text_sarg or ingredients_csv
         recipes += query_edamam(edamam_sarg)
+        print 'e', len(recipes)
         recipes += query_food2fork(food2fork_sarg)
+        print 'f', len(recipes)
         recipes += query_yummly(text_sarg, ingredients_csv)
+        print 'y', len(recipes)
     for recipe in recipes:
         recipe.get_adjectives()
     if jsonify:

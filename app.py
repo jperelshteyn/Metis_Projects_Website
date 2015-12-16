@@ -98,7 +98,7 @@ def get_ingredients():
 def btnSearch_handler():
     ingredients_csv = request.args.get('ingredients_csv')
     text_sarg = request.args.get('text_sarg')
-    recipes = recipe_search.search(ingredients_csv, text_sarg)
+    recipes = recipe_search.search(ingredients_csv, text_sarg, test=False)
     scored_recipes = recipe_search.sort_score_recipes(recipes)
     return jsonify(recipes=scored_recipes)
 
