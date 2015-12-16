@@ -61,7 +61,8 @@
     }
 
     var ingredientItem = function(name){
-        return ["<li><div class='col-md-10 tt-suggestion'>"+name+"</div><div class='col-md-2'>",
+        return ["<li><div class='col-md-10 tt-suggestion ingredient-name'>"+name,
+                "</div><div class='col-md-2'>",
                "<button type='button' class='close' aria-label='Close' onclick='deleteIngredient(this)'>",
                "<span aria-hidden='true'>&times;</span>",
                "</button></div></li>"].join('\n');
@@ -118,7 +119,7 @@
 
     function getIngredients() {
         var ingredients_csv = '';
-        $('#ingredient-list li').each( function(){
+        $('#ingredient-list .ingredient-name').each( function(){
             ingredients_csv += $(this).text().slice(0,-1) + ',';
         });
         return ingredients_csv.slice(0,-1);
@@ -129,7 +130,7 @@
             showWaiting(true);
           $.getJSON($SCRIPT_ROOT + '/_btnSearch_handler', {
             ingredients_csv: getIngredients(),
-            text_sarg: $("#txtTextSarg").text()
+            text_sarg: $("#txtTextSarg").val()
           }, function(data) {
             recipes = data.recipes;
             var currentGenre = $("#current-selection").text();
