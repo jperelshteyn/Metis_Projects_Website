@@ -12,34 +12,27 @@
   <script type=text/javascript>
   $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
 </script>
-    <link rel="stylesheet" href="/static/css/main.css?q=23"
+    <link rel="stylesheet" href="/static/css/main.css?q=54"
    type="text/css" media="screen" charset="utf-8" />
-
-    <title>Metis Projects</title>
-    <style>
-
-    </style>
 </head>
 <body>
-<nav class="navbar navbar-inverse">
+<nav class="navbar navbar-inverse navbar-static-top">
     <div class="row">
         <div class="col-md-2">
             <div class="navbar-header">
-                <img src="../static/img/metis_logo_white_horiz.png" class="img-responsive"></img>
+                <img src="../static/files/logo-dark.png" class="img-responsive"></img>
+               <!--  <img src="../static/img/metis_logo_white_horiz.png" class="img-responsive"></img> -->
             </div>
         </div>
         <div class="col-md-10">
-            <br/>
             <ul class="nav navbar-nav">
-                <li><a href="{{url_for('mta') }}">MTA</a></li>
-                <li><a href="{{url_for('movies') }}">Movies</a></li>
-                <li><a href="{{url_for('twitter_news') }}">Twitter</a></li>
-                <li><a href="{{url_for('recipes') }}">Recipes</a></li>
+                <li><a href="{{url_for('about') }}">about</a></li>
+                <li><a href="{{url_for('projects') }}">projects</a></li>
             </ul>
         </div>
     </div>
 </nav>
-<div id="content" class="container">
+<div id="content" class="fluid-container">
 
     {% block content %}
     {% endblock %}

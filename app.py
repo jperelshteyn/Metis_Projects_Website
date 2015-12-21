@@ -17,6 +17,16 @@ def home():
     return render_template('index.html')
 
 
+@app.route('/about')
+def about():
+    return render_template('about.html')
+
+
+@app.route('/projects')
+def projects():
+    return render_template('projects.html')
+
+
 @app.route('/mta')
 def mta():
     return render_template('mta.html')
@@ -99,7 +109,7 @@ def get_ingredients():
 def btnSearch_handler():
     ingredients_csv = request.args.get('ingredients_csv')
     text_sarg = request.args.get('text_sarg')
-    recipes = recipe_search.search(ingredients_csv, text_sarg, test=False)
+    recipes = recipe_search.search(ingredients_csv, text_sarg, test=True)
     scored_recipes = recipe_search.sort_score_recipes(recipes)
     return jsonify(recipes=scored_recipes)
 
