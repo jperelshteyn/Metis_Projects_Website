@@ -1,0 +1,36 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<br/>
+<div class="row">
+	<div class="col-md-4">
+		<div class="project">
+			<span class="project-title">
+				<a href="{{url_for('recipes') }}">recipe music pairing</a>
+			</span>
+			<hr/>
+			<p>recipe search app, which sorts results by how closely a recipe's mood matches a music genre</p>
+		</div>
+	</div>
+	<div class="col-md-4">
+		<div class="project">
+			<span class="project-title">
+				<a href="{{url_for('twitter_news') }}">twitter setiment monitor</a>
+			</span>
+			<hr/>
+			<p>shows twitter's rections to recent news as a d3 sentiment graph</p>
+		</div>
+	</div>
+	<div class="col-md-4">
+		<div class="project">
+			<span class="project-title">
+				<a href="{{url_for('movies') }}">movie attendance analysis</a>
+			</span>
+			<hr/>
+			<p>regression analysis influence of critical reviews on movie attendance</p>
+		</div>
+	</div>
+</div>
+
+
+{% endblock %}
