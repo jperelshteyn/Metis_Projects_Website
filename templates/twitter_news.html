@@ -85,8 +85,10 @@
     var minX = Math.min.apply(Math, data.map(function(d){return d.time_period;}))
 
     // Set the dimensions of the canvas / graph
-    var margin = {top: 30, right: 20, bottom: 30, left: 50},
-        width = 1000 - margin.left - margin.right,
+    var totalWidth = Math.max(window.innerWidth, 500);
+    var sideMargin = totalWidth * .05;
+    var margin = {top: 30, right: sideMargin, bottom: 30, left: sideMargin},
+        width = totalWidth - margin.left - margin.right,
         height = 400 - margin.top - margin.bottom;
 
     
@@ -116,9 +118,11 @@
     // Derive coordinates for headline score
     //var headline_score_y = y(headline_score);
 
-    // Scale the range of the data
+    // Scale the range of the data (include headline sentiment score)
+    var sentiments = $.map(data, function(val, i) {return val.sentiment; });
+    sentiments.push(headline_score);
     x.domain(d3.extent(data, function(d) { return d.time_period; }));
-    y.domain(d3.extent(data, function(d) { return d.sentiment; }));
+    y.domain(d3.extent(sentiments, function(d) { return d; }));
 
     // Adjust graph title
     $('#graph-title').text('average twitter sentiment since news hit (by ' + scale.slice(0, -1) + ')');
