@@ -183,49 +183,82 @@
 
 </script>
 
-<div class="container-fluid">
-
-    <h1>twitter news reaction</h1>
-    <br/>
-    <div class="row">
-        <div class="col-md-2">
-            <select id="ddlDates" class="form-control" onchange="dateSelected();">
-                <option class="default" value="0"> < choose date > </option>
-                {% for d in dates %}
-                    <option value="{{ d }}">{{ d }}</option>
-                {% endfor %}
-            </select>
+<div class="row">
+    <div class="col-md-2">
+        <div class="project-description">
+            <div class="search-header">
+                <span>about: </span>
+            </div>
+            <br/>
+            <ul class="list-unstyled">
+                <li>
+                    <a onclick="displayModal('twitter')" href="#">description</a>
+                </li>
+            </ul>
         </div>
-        <div class="col-md-6">
-            <select id="ddlHeadlines" class="form-control">
-            </select>
-        </div>
-        <div class="col-md-2">
-            <input id="btnGetSargs" type="submit" value="Extract Search Terms" class="btn btn-default"></input>
-        </div>        
     </div>
-    <br/>
-    <div class="row" id="divQuery" style="display: none">
-        <div class="col-md-6">
-            <input type="text" id="txtSargs" class="form-control"></input>
+    <div class="col-md-5 verticalLine">
+        <div class="search-header">
+            <span>select headline: </span>
         </div>
-        <div class="col-md-2">
-            <input id="btnQuery" type="submit" value="Query Twitter" class="btn btn-default"></input>
-        </div>         
-    </div>
-    <br/>
-    <h4 id="no-tweets" style="display: none">No tweets matched the search</h4>
-    <div id="divD3" style="display: none">
+        <br/>
         <div class="row">
-            <div class="col-md-offset-1 col-md-11">
-                <h3 id="graph-title"></h3>
-                <h5 id="tweet-count"></h5>
-            </div>    
+            <div class="col-md-4">
+                <select id="ddlDates" class="form-control" onchange="dateSelected();">
+                    <option class="default" value="0"> < choose date > </option>
+                    {% for d in dates %}
+                        <option value="{{ d }}">{{ d }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-8">
+                <select id="ddlHeadlines" class="form-control">
+                </select>
+            </div>
         </div>
-        <div id="d3-canvas"></div>
+        <br/>
+        <div class="row">
+            <div class="col-md-offset-7 col-md-4">
+                <input id="btnGetSargs" type="submit" value="Extract Search Terms" class="btn btn-default" />
+            </div>
+        </div>
     </div>
-    <div id="divWaiting" class="content-center" style="display: none">
-        <img src="../static/img/waiting.gif" id="imgWaiting"></img>
+    <div class="col-md-5 verticalLine" id="divQuery" style="display: none">
+        <div class="search-header">
+            <span>search twitter: </span>
+        </div>
+        <br/>
+        <div class="row">
+            <div class="col-md-11">
+                <input type="text" id="txtSargs" class="form-control"/>
+            </div>
+        </div>
+        <br/>
+        <div class="row">
+            <div class="col-md-offset-8 col-md-4">
+                <input id="btnQuery" type="submit" value="Search" class="btn btn-default"/>
+            </div>
+        </div>
     </div>
+
 </div>
+
+<hr/>
+
+<h4 id="no-tweets" style="display: none">No tweets matched the search</h4>
+<div id="divD3" style="display: none">
+    <div class="row">
+        <div class="col-md-offset-1 col-md-11">
+            <h3 id="graph-title"></h3>
+            <h5 id="tweet-count"></h5>
+        </div>    
+    </div>
+    <div id="d3-canvas"></div>
+</div>
+<div id="divWaiting" class="content-center" style="display: none">
+    <img src="../static/img/waiting.gif" id="imgWaiting"></img>
+</div>
+
+
+
 {% endblock %}

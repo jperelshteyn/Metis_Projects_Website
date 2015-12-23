@@ -48,10 +48,9 @@
                                         return (r.recipe_id == recipe_id); }).pop();
             var adjectives = recipe.common_adjectives[currentGenre];
 
-            var info = Object;
-            info.header = 'Common words';
-            info.text =  adjectives.join(', ');
-            showPopup(info);
+            var title = 'common words';
+            var text =  adjectives.join(', ');
+            displayModal('custom', title, text);
             //$("#common-adjectives").text(adjectives.join(', '));
         }
     }
@@ -103,14 +102,6 @@
         $(a).text(currentGenre);
         $("#current-selection").text(newGenre);
         makeRecipeGrid(newGenre);
-    }
-
-    function showPopup(info) {
-        if (info != 'description'){
-            $('#myModal .modal-title').text(info.header);
-            $('#myModal .modal-body').text(info.text);
-        }
-        $("#myModal").modal();
     }
 
     $(function(){
@@ -223,7 +214,7 @@
             <br/>
             <ul class="list-unstyled">
                 <li>
-                    <a data-toggle="modal" href="#myModal">description</a>
+                    <a onclick="displayModal('recipes')" href="#">description</a>
                 </li>
                 <li>
                     <a target="__blank" href="../static/files/recipe_presentation.pdf">presentation</a>
@@ -298,30 +289,6 @@
 </div>
     <div id="divWaiting" class="content-center" style="display: none">
     <img src="../static/img/waiting.gif" id="imgWaiting"></img>
-</div>
-
-<!-- Modal -->
-<div id="myModal" class="modal fade" role="dialog">
-  <div class="modal-dialog">
-
-    <!-- Modal content-->
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal">&times;</button>
-        <h4 class="modal-title">app description</h4>
-      </div>
-      <div class="modal-body">
-        <p>The app lets you search for recipes and sort those recipes by how close they are to a music genre. Sorting is done by counting number of adjectives that are associated with both the recipe and the music genre.</p>
-        <p>To search for recipes, enter ingredients and/or dish name, and press search.</p>
-        <p>Select music genre to sort and the most matched recipe would by in the upper left.</p>
-        <p>Clicking "show words" will display the adjectives that matched recipe to the genre.</p>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-      </div>
-    </div>
-
-  </div>
 </div>
 
 {% endblock %}
