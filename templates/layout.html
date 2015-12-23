@@ -20,7 +20,7 @@
     <div class="row">
         <div class="col-md-2">
             <div class="navbar-header">
-                <img src="../static/files/logo-dark.png" class="img-responsive"></img>
+                <img src="../static/img/logo-dark.png" class="img-responsive"></img>
                <!--  <img src="../static/img/metis_logo_white_horiz.png" class="img-responsive"></img> -->
             </div>
         </div>
@@ -32,6 +32,36 @@
         </div>
     </div>
 </nav>
+
+<script>
+var descriptions = {
+    'recipes' : ['The app lets user search for recipes and sort those recipes by how close they are to a music genre. Sorting is done by counting number of adjectives that are associated with both the recipe and the music genre.',
+            'To search for recipes, enter ingredients and/or dish name, and press search.',
+            'Select music genre to sort - the closest matched recipe is in the upper left.',
+            'Clicking "show words" will display the adjectives that matched recipe to the genre.'],
+    'twitter' : ['The app lets user select a headline then using a light NLP algorithm figures out which words from the headline are best suited to query twitter.',
+            'The search terms can be edited.',
+            'The tweets in the results of the query are passed through sentiment analysis tool. The per hour averages of the sentiment scores are displayed in a line graph.']
+    };
+
+    function displayModal(typeId, title, text) {
+        $.each( descriptions, function( appName, description ) {
+                if (appName==typeId) {
+                    title = 'app description';
+                    text = '<p>' + description.join('</p><p>') + '</p>';
+                }
+          });
+        if (title) {$('#myModal .modal-title').text(title);}
+        if (text) {$('#myModal .modal-body').html(text);}
+        $("#myModal").modal();
+        return false;
+    }
+
+</script>
+
+
+
+
 <div id="content" class="fluid-container">
 
     {% block content %}
@@ -40,5 +70,23 @@
 
     </div>
 
+<!-- Modal -->
+<div id="myModal" class="modal fade" role="dialog">
+  <div class="modal-dialog">
+
+    <!-- Modal content-->
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+        <h4 class="modal-title">app description</h4>
+      </div>
+      <div class="modal-body"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+
+  </div>
+</div>
 </body>
 </html>
