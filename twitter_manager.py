@@ -102,7 +102,7 @@ def get_sentiment_over_time(news_id, sarg):
         headline = db.news.find_one({u'_id': ObjectId(news_id)})
         publish_time = headline[u'time']
         headline_text = headline['headline']
-        scale, denominator = get_time_scale(tweets, headline_text)
+        scale, denominator = get_time_scale(tweets, headline_text, publish_time)
         for tweet in tweets:
             tweet_time = get_tweet_time(tweet)
             time_since = floor((tweet_time - publish_time) / denominator)
@@ -125,13 +125,13 @@ def get_sentiment_over_time(news_id, sarg):
         return None, None, None
 
 
-def get_time_scale(tweets, headline_text):
+def get_time_scale(tweets, headline_text, publish_time):
     tweet_time = [get_tweet_time(t) for t in tweets if not is_retweet(t, headline_text)]
     max_time = max(tweet_time)
-    min_time = min([t for t in tweet_time if t >= 0])
+    min_time = min([t for t in tweet_time if t >= publish_time])
     hour = 3600
     diff_hours = (max_time - min_time) / hour
-    if diff_hours > 24 * 4:
+    if diff_hours > 24 * 6:
         return 'days', hour * 24
     elif diff_hours > 4:
         return 'hours', hour

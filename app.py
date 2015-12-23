@@ -63,6 +63,7 @@ def btnQuery_handler():
     h_id = request.args.get('id')
     sargs = request.args.get('text')
     headline = request.args.get('headline')
+    print h_id, sargs, headline
     if h_id:
         # query twitter
         twitter_manager.query(sargs, h_id)
