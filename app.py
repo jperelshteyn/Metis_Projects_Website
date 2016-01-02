@@ -2,10 +2,10 @@ __author__ = 'jperelshteyn'
 
 from flask import Flask, render_template, request, redirect, url_for, abort, session, jsonify
 from pymongo import MongoClient
-from twitter import twitter_manager, headline_manager
+from twitter_monitor import twitter_manager, headline_manager
 import os
 from time import strftime, gmtime, time
-from recipes import recipe_search
+from recipe_sorter import recipe_search
 
 
 app = Flask(__name__)
