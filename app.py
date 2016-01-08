@@ -74,16 +74,19 @@ def btnQuery_handler():
 @app.route('/_ddlDates_handler')
 def ddlDates_handler():
     selected_date = request.args.get('date')
+    print selected_date
     headlines = headline_manager.get_headlines_for_ddl(selected_date)
+    print headlines
     return jsonify(headlines=headlines)
 
 
 def get_dates_for_ddl():
     dates = []
     current = gmtime()
-    for days_back in range(1, 8):
-        back_date = time() - days_back * 86400 
-        dates.append(strftime("%a, %b %d", gmtime(back_date)))
+    for days_back in range(0, 7):
+        back_date = gmtime(time() - days_back * 86400)
+        dates.append({'value': strftime("%m/%d/%y", back_date),
+                      'text': strftime("%a, %b %d", back_date)})
     return dates
 
 

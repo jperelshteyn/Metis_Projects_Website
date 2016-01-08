@@ -211,7 +211,7 @@
                 <select id="ddlDates" class="form-control" onchange="dateSelected();">
                     <option class="default" value="0"> < choose date > </option>
                     {% for d in dates %}
-                        <option value="{{ d }}">{{ d }}</option>
+                        <option value="{{ d.value }}">{{ d.text }}</option>
                     {% endfor %}
                 </select>
             </div>
