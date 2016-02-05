@@ -62,22 +62,31 @@ def btnQuery_handler():
     h_id = request.args.get('id')
     sargs = request.args.get('text')
     headline = request.args.get('headline')
+    if sargs == 'testmode':
+        h_id, sargs, headline = '56ae3df25fad558df56c18a4', 'mosquito weapon zika', 'New Weapon to Fight Zika: The Mosquito'
     print h_id, sargs, headline
     if h_id:
         # query twitter
         twitter_manager.query(sargs, h_id)
         # process twitter results
-        sentiment, tweet_count, scale = twitter_manager.get_sentiment_over_time(h_id, sargs)
         headline_score = headline_manager.get_s_score(headline)
-        return jsonify(result=sentiment, tweet_count=tweet_count, headline_score=headline_score, scale=scale)
+        tweets = twitter_manager.read_db_tweets(h_id, sargs)
+        g = twitter_manager.Graph(tweets, h_id)
+        print g.tweet_count
+        return jsonify(result=g.to_json(), 
+                       tweet_count=g.tweet_count, 
+                       headline_score=headline_score, 
+                       scale=g.time_scale)
+
+        # sentiment, tweet_count, scale = twitter_manager.get_sentiment_over_time(h_id, sargs)
+        
+        # return jsonify(result=sentiment, tweet_count=tweet_count, headline_score=headline_score, scale=scale)
 
 
 @app.route('/_ddlDates_handler')
 def ddlDates_handler():
     selected_date = request.args.get('date')
-    print selected_date
     headlines = headline_manager.get_headlines_for_ddl(selected_date)
-    print headlines
     return jsonify(headlines=headlines)
 
 

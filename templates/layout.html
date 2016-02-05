@@ -8,11 +8,11 @@
    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" integrity="sha512-dTfge/zgoMYpP7QbHy4gWMEGsbsdZeCXz7irItjcC3sPUFtf0kuFbDz/ixG7ArTxmDjLXDmezHubeNikyKGVyQ==" crossorigin="anonymous">
     <script>window.jQuery || document.write('<script src="{{
   url_for('static', filename='jquery-1.11.3.min.js') }}">\x3C/script>')</script>
-    <script src="../static/typeahead.bundle.js"></script>
+    <script src="../static/js/typeahead.bundle.js"></script>
   <script type=text/javascript>
   $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
 </script>
-    <link rel="stylesheet" href="/static/css/main.css?q=54"
+    <link rel="stylesheet" href="/static/css/main.css?q=61"
    type="text/css" media="screen" charset="utf-8" />
 </head>
 <body>
@@ -41,7 +41,8 @@ var descriptions = {
             'Clicking "show words" will display the adjectives that matched recipe to the genre.'],
     'twitter' : ['The app lets user select a headline then using a light NLP algorithm figures out which words from the headline are best suited to query twitter.',
             'The search terms can be edited.',
-            'The tweets in the results of the query are passed through sentiment analysis tool. The per hour averages of the sentiment scores are displayed in a line graph.']
+            'The tweets in the results of the query are passed through sentiment analysis tool. The per hour averages of the sentiment scores are displayed in a line graph.',
+            'Click any point on the graph to see the tweets for that time period.']
     };
 
     function displayModal(typeId, title, text) {
