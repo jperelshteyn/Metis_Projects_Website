@@ -4,8 +4,10 @@
 
 
 
-
+<script src="../static/js/marquee.js"></script>
 <script type=text/javascript>
+
+  globalData = [];
 
   function showWaiting(show){
     if (show){
@@ -65,6 +67,7 @@
       }, function(data) {
         showWaiting(false);
         if (data.result){
+            globalData = data.result;
             $("#tweet-count").text("(" + data.tweet_count + " tweets analyzed)")
             makeGraph(data.result, data.headline_score, data.scale);
         } else {
@@ -82,10 +85,10 @@
     $("#d3-canvas").empty();
 
     var hasNegSentiment = Math.min.apply(Math, data.map(function(d){return d.sentiment;})) < 0;
-    var minX = Math.min.apply(Math, data.map(function(d){return d.time_period;}))
+    var minX = Math.min.apply(Math, data.map(function(d){return d.time;}))
 
     // Set the dimensions of the canvas / graph
-    var totalWidth = Math.max(window.innerWidth, 500);
+    var totalWidth = Math.max($("#d3-canvas").width(), 500);
     var sideMargin = totalWidth * .05;
     var margin = {top: 30, right: sideMargin, bottom: 30, left: sideMargin},
         width = totalWidth - margin.left - margin.right,
@@ -104,7 +107,7 @@
 
     // Define the line
     var valueline = d3.svg.line()
-        .x(function(d) { return x(d.time_period); })
+        .x(function(d) { return x(d.time); })
         .y(function(d) { return y(d.sentiment); });
 
     // Adds the svg canvas
@@ -112,6 +115,7 @@
         .append("svg")
             .attr("width", width + margin.left + margin.right)
             .attr("height", height + margin.top + margin.bottom)
+            .attr("id", "graph")
         .append("g")
             .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
@@ -121,7 +125,7 @@
     // Scale the range of the data (include headline sentiment score)
     var sentiments = $.map(data, function(val, i) {return val.sentiment; });
     sentiments.push(headline_score);
-    x.domain(d3.extent(data, function(d) { return d.time_period; }));
+    x.domain(d3.extent(data, function(d) { return d.time; }));
     y.domain(d3.extent(sentiments, function(d) { return d; }));
 
     // Adjust graph title
@@ -131,6 +135,32 @@
     svg.append("path")
         .attr("class", "line")
         .attr("d", valueline(data));
+
+    // Add line points
+    svg.selectAll("circle")
+        .data(data)
+      .enter().append("circle")
+        .attr("cx", function(d) {return x(d.time); })
+        .attr("cy", function(d) {return y(d.sentiment); })
+        .attr("r", 5)
+        .classed("point-blue", true)
+        .attr("onclick", 
+            function(d) { 
+                // svg.selectAll("circle")
+                //     .classed('point-highlight-stay', false);
+                // d3.select(this)
+                //     .classed('point-highlight-stay', true);
+                //$(this).removeClass('point-highlight-stay'); });
+                //$(this).addClass('point-highlight-stay');
+                return "showTweets(this,"+d.time+",'"+scale+"');"; 
+            });
+        // .on('mouseover', function(){ 
+        //                     d3.select(this)
+        //                         .classed('point-highlight', true); })
+        // .on('mouseout', function(){ 
+        //                     d3.select(this)
+        //                         .classed('point-highlight', false); })
+        
 
     // Add the X Axis
     svg.append("g")
@@ -183,6 +213,32 @@
             .attr("stroke-width", 1)
             .attr("stroke", "grey");
     }
+  }
+
+  function showTweets(sender, time, scale){
+
+    var d = $.grep(globalData, function(d){ return d.time == time; });
+    var tweets = '<p>' + d[0].tweets.join('</p><br/><p>') + '</p>';
+
+    // $('circle').removeClass('point-highlight');
+    // $(sender).addClass('point-highlight');
+    d3.selectAll('circle').classed('point-highlight', false);
+    d3.select(sender).classed('point-highlight', true);
+
+    $('#scroll-container').empty();
+
+    $('#scroll-container').append(
+        $('<h4></h4').text(time+' '+scale+' since the headline'));
+
+    $('#scroll-container').append(
+        $('<marquee></marquee>')
+            .attr('direction', 'up')
+            .attr('id', 'tweet-scroll')
+            .attr('height', '300px')
+            .html(tweets)
+    );
+
+
   }
 
 </script>
@@ -249,7 +305,7 @@
 
 <hr/>
 
-<h4 id="no-tweets" style="display: none">No tweets matched the search</h4>
+<h4 id="no-tweets" style="display: none">No tweets since the headline matched the search</h4>
 <div id="divD3" style="display: none">
     <div class="row">
         <div class="col-md-offset-1 col-md-11">
@@ -257,7 +313,11 @@
             <h5 id="tweet-count"></h5>
         </div>    
     </div>
-    <div id="d3-canvas"></div>
+    <div class="row">
+        <div class="col-md-10" id="d3-canvas"></div>
+        <div id="scroll-container" class="col-md-2" style="height: 400px;">
+        </div>
+    </div>
 </div>
 <div id="divWaiting" class="content-center" style="display: none">
     <img src="../static/img/waiting.gif" id="imgWaiting"></img>

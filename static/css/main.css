@@ -198,3 +198,13 @@ path {
   margin-left: 15px;
   font-size: 18px;
 }
+
+.point-blue {
+  fill: steelblue;
+}
+.point-blue:hover {
+  fill: maroon;
+}
+.point-highlight {
+  fill: maroon !important;
+}
