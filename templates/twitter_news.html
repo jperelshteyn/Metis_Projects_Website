@@ -44,9 +44,16 @@
     $('#btnGetSargs').bind('click', function() {
       $("#divD3").hide();
       showWaiting(true);
+      var id = $("#ddlHeadlines option:selected").val();
+      var text = $("#ddlHeadlines option:selected").text();
+      if (!id){
+        showWaiting(false);
+        return false;
+      }
+
       $.getJSON($SCRIPT_ROOT + '/_btnGetSargs_handler', {
-        id: $("#ddlHeadlines option:selected").val(),
-        text: $("#ddlHeadlines option:selected").text()
+        id: id,
+        text: text
       }, function(data) {
         $("#divQuery").show();
         $("#txtSargs").val(data.result);
@@ -146,20 +153,8 @@
         .classed("point-blue", true)
         .attr("onclick", 
             function(d) { 
-                // svg.selectAll("circle")
-                //     .classed('point-highlight-stay', false);
-                // d3.select(this)
-                //     .classed('point-highlight-stay', true);
-                //$(this).removeClass('point-highlight-stay'); });
-                //$(this).addClass('point-highlight-stay');
                 return "showTweets(this,"+d.time+",'"+scale+"');"; 
             });
-        // .on('mouseover', function(){ 
-        //                     d3.select(this)
-        //                         .classed('point-highlight', true); })
-        // .on('mouseout', function(){ 
-        //                     d3.select(this)
-        //                         .classed('point-highlight', false); })
         
 
     // Add the X Axis
@@ -220,8 +215,6 @@
     var d = $.grep(globalData, function(d){ return d.time == time; });
     var tweets = '<p>' + d[0].tweets.join('</p><br/><p>') + '</p>';
 
-    // $('circle').removeClass('point-highlight');
-    // $(sender).addClass('point-highlight');
     d3.selectAll('circle').classed('point-highlight', false);
     d3.select(sender).classed('point-highlight', true);
 
