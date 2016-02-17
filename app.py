@@ -13,7 +13,7 @@ app = Flask(__name__)
 
 @app.route('/')
 def home():
-    return render_template('about.html')
+    return render_template('projects.html')
 
 
 @app.route('/about')
@@ -132,5 +132,5 @@ def override_url_for():
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=80)
-    #app.run(debug=True)
+    #app.run(host='0.0.0.0', port=80)
+    app.run(debug=True)
