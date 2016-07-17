@@ -140,28 +140,29 @@ def pool_app():
 @app.route('/_get_players')
 def get_players():
     players = pool.get_players()
+    print players
     return jsonify(players=players)
 
 @app.route('/_update_player')
 def update_player():
+    player = pool.Player()
     action = request.args.get('action')
-    name = request.args.get('name')
+    player_name = request.args.get('playerName')
     new_name = request.args.get('newName')
-    player = pool.Player(new_name or name)
     success = False
     message = None
     if action == 'save':
-        if player.is_duplicate():
+        if player.is_duplicate(new_name):
             success = False
             message = 'name is already taken, please choose a different one'
         else:
-            if new_name:
-                player.update(name)
+            if player_name and new_name:
+                player.update(player_name, new_name)
             else:
-                player.save()
+                player.save(new_name)
             success = True
     elif action == 'delete':
-        success = player.delete()
+        success = player.delete(player_name)
     else:
         raise Exception('Unrecognized action: ' + action)
     return jsonify(success=success, message=message)
@@ -170,7 +171,7 @@ def update_player():
 def record_game():
     winner = request.args.get('winner')
     loser = request.args.get('loser')
-    success = pool.Game(pool.Player(winner), pool.Player(loser)).save()
+    success = pool.Game().save(winner, loser)
     return jsonify(success=success)
 
 @app.route('/_get_top_players')

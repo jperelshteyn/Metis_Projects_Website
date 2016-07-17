@@ -55,6 +55,7 @@
 
     }
 
+    // Displays message for 3 seconds
     function showMessage(text, type) {
         $('#message').text(text);
         $('#message').addClass(type);
@@ -62,7 +63,7 @@
             $('#message').text('');
             $('#message').removeClass(type);
         },
-            5000
+            3000
         );
     }
 
@@ -110,8 +111,8 @@
     // Saves, updates or deletes player on server
     function updatePlayer(action, playerName, callBackFunc, newName) {
         $.getJSON($SCRIPT_ROOT + '/_update_player', 
-            {action: action, name: playerName, newName: newName},
-            function(data) {callBackFunc(data);}
+            {action: action, playerName: playerName, newName: newName},
+            function(data) { callBackFunc(data); }
         )
     }
 
@@ -142,8 +143,14 @@
             }
         }
 
-        if (newName && newName != currentName) {
-            updatePlayer('save', currentName, updateName, newName);
+        if (newName) {
+            if (newName != currentName) {
+                updatePlayer('save', currentName, updateName, newName);
+            } else {
+                $('#save-message').text('New name must be different from original');
+            }
+        } else {
+            $('#save-message').text('Please enter name.');
         }
 
     }
@@ -249,7 +256,10 @@
     $(document).ready(function(){
         switchModes('find-player');
         $('#btn-create').click(function(){editPlayer();});
-        $('#btn-search').click(function(){switchModes('find-player');});
+        $('#btn-search').click(function(){
+            $("#selected-player").text('');
+            switchModes('find-player');
+        });
         $('#btn-add').click(function(){addToGame();});
         $('#btn-edit').click(function(){
             var name = $("#selected-player").text();
@@ -266,7 +276,7 @@
           if(e.keyCode==13)
           $('#btn-save').click();
         });
-
+        $('#btn-close').click(function(){$('#save-message').text('');})
         loadPlayers();
         loadTopPlayers();
     });
@@ -365,7 +375,7 @@
       </div>
       <div class="modal-footer">
         <button type="button" id="btn-save" class="btn btn-default">Save</button>
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" id="btn-close" class="btn btn-default" data-dismiss="modal">Cancel</button>
       </div>
     </div>
   </div>

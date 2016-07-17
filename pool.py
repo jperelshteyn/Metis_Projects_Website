@@ -19,47 +19,44 @@ def init_sqldb():
 
 class Player:
     
-    def __init__(self, name):
-        self.name = name
-        self._id = self._get_id()
-        
-    def save(self,):   
+    def save(self, name):   
         conn = get_sqldb()
         curs = conn.cursor()
-        curs.execute('insert into players (name) values (?)',(self.name,))
+        curs.execute('insert into players (name) values (?)', (name,))
         self._id = curs.lastrowid
         conn.commit()
         conn.close()
         
-    def update(self, old_name):
+    def update(self, old_name, new_name):
         conn = get_sqldb()
         curs = conn.cursor()
-        curs.execute('update players set name = ? where name = ?', (self.name, old_name))
+        curs.execute('update players set name = ? where name = ?', (new_name, old_name))
         conn.commit()
         conn.close()        
 
 
-    def _get_id(self):
+    def get_id(self, name):
         conn = get_sqldb()
         curs = conn.cursor()
-        result = curs.execute('select rowid from players where archived = 0 and name = ?', (self.name,))
+        result = curs.execute('select rowid from players where archived = 0 and name = ?', (name,))
         _id = result.fetchone()
         conn.close()
         return _id[0] if _id else None   
     
-    def is_duplicate(self):
+    def is_duplicate(self, name):
         conn = get_sqldb()
         curs = conn.cursor()
-        result = curs.execute('select "exists" from players where archived = 0 and name = ?', (self.name,))
+        result = curs.execute('select "exists" from players where archived = 0 and name = ?', (name,))
         exists = result.fetchone()
         conn.close()
         return True if exists else False 
     
-    def delete(self):
-        if self._id:
+    def delete(self, name):
+        _id = self.get_id(name)
+        if _id:
             conn = get_sqldb()
             curs = conn.cursor()
-            curs.execute('update players set archived = 1 where rowid = ?', (self._id,))
+            curs.execute('update players set archived = 1 where rowid = ?', (_id,))
             conn.commit()
             conn.close()
             return True
@@ -68,18 +65,12 @@ class Player:
     
 class Game:
     
-    def __init__(self, winner, loser):
-        self.winner = winner
-        self.loser = loser
-
-    def save(self):
-        if not self.winner._id:
-            self.winner.save()
-        if not self.loser._id:
-            self.loser.save()
+    def save(self, winner_name, loser_name):
+        winner_id = Player().get_id(winner_name)
+        loser_id = Player().get_id(loser_name)
         conn = get_sqldb()
         curs = conn.cursor()
-        curs.execute('insert into games (winner, loser) values (?, ?)', (self.winner._id, self.loser._id))
+        curs.execute('insert into games (winner, loser) values (?, ?)', (winner_id, loser_id))
         conn.commit()
         conn.close()
         return True        
