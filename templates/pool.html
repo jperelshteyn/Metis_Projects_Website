@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js" integrity="sha512-K1qjQ+NcF2TYO/eI3M6v8EiNYZfA95pQumfvcVrTHtwQVDG+aHRqLi/ETn2uB+1JqwYqVG3LIvdm9lj6imS/pQ==" crossorigin="anonymous"></script>
+   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" integrity="sha512-dTfge/zgoMYpP7QbHy4gWMEGsbsdZeCXz7irItjcC3sPUFtf0kuFbDz/ixG7ArTxmDjLXDmezHubeNikyKGVyQ==" crossorigin="anonymous">
+
+    <script>
+    window.jQuery || 
+    document.write('<script src="{{url_for('static', filename='jquery-1.11.3.min.js') }}">\x3C/script>')
+    </script>
+
+    <script src="../static/js/typeahead.bundle.js"></script>
+  <script type=text/javascript>
+  $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
+</script>
+    <link rel="stylesheet" href="/static/css/main.css?q=65"
+   type="text/css" media="screen" charset="utf-8" />
+</head>
+<body>
+
+<script>
+
+    // Handles the overall state of the app 
+    function switchModes(mode) {
+        switch (mode) {
+            case "find-player":
+                $("#player-search").show();
+                $("#player-display").hide();
+                $("#player-actions").hide();
+                $("#game").hide();
+                $('.game-actions').hide();
+            break;
+            case "player-selected":
+                $("#player-search").hide('fast');
+                $("#player-display").show('fast');
+                $("#player-actions").show("fast");
+            break;
+            case "player1-added":
+                $("#player-search").show('fast');
+                $("#player-display").hide('fast');
+                $("#player-actions").hide('fast');
+                $("#game").show('fast');
+                $('.game-actions').hide('fast');
+            break;
+            case "player2-added":
+                $("#player-search").hide('fast');
+                $("#player-display").hide('fast');
+                $("#player-actions").hide('fast');
+                $("#game").show('fast');
+                $('.game-actions').show('fast');
+            break;
+        }
+
+    }
+
+    function showMessage(text, type) {
+        $('#message').text(text);
+        $('#message').addClass(type);
+        setTimeout( function() {
+            $('#message').text('');
+            $('#message').removeClass(type);
+        },
+            5000
+        );
+    }
+
+    // Finds matches for typeahead string and returns them in a call back func
+    var substringMatcher = function(strs) {
+      return function findMatches(q, cb) {
+        var matches, substringRegex;
+        matches = [];
+        substrRegex = new RegExp(q, 'i');
+        $.each(strs, function(i, str) {
+          if (substrRegex.test(str)) {
+            matches.push(str);
+          }
+        });
+
+        cb(matches);
+      };
+    };
+
+    // Loads typeahead with all active players and wires up on selected functionality 
+    function loadPlayers() {
+        $("#player-search .typeahead").typeahead('destroy');
+        $.getJSON($SCRIPT_ROOT + '/_get_players', {}, 
+            function(data) {
+                $("#player-search .typeahead")
+                    .typeahead({
+                        hint: true,
+                        highlight: true,
+                        minLength: 1
+                    },
+                    {
+                        name: 'players',
+                        source: substringMatcher(data.players)
+                    })
+                    .on("typeahead:selected", function(obj) {
+                        if (obj.currentTarget.value) {
+                            $('#selected-player').text(obj.currentTarget.value);
+                        }
+                        switchModes('player-selected');
+                        $('.typeahead').typeahead('val', '');
+                    });
+        });
+    }
+
+    // Saves, updates or deletes player on server
+    function updatePlayer(action, playerName, callBackFunc, newName) {
+        $.getJSON($SCRIPT_ROOT + '/_update_player', 
+            {action: action, name: playerName, newName: newName},
+            function(data) {callBackFunc(data);}
+        )
+    }
+
+    // Brings up modal window to edit player name
+    function editPlayer(name) {
+        $('#player-name').val(name);
+        $("#myModal").modal();
+        return false;
+    }
+
+    // Creates a new player or updates name
+    function savePlayer(){
+
+        var newName = $('#player-name').val();
+        var currentName = $('#selected-player').text();
+
+        // Call back function for the update player AJAX call
+        var updateName = function(response){
+            if (response.success) {
+                $('#save-message').text('');
+                $("#myModal").modal('hide');
+                $('#selected-player').text(newName);
+                switchModes('player-selected');
+                loadPlayers();
+                loadTopPlayers();
+            } else {
+                $('#save-message').text(response.message);
+            }
+        }
+
+        if (newName && newName != currentName) {
+            updatePlayer('save', currentName, updateName, newName);
+        }
+
+    }
+
+    // Deletes selected player
+    function deletePlayer(){
+        var sure = confirm('Are you sure you want to delete the player?');
+        var selectedPlayer = $('#selected-player').text();
+
+        function confirmation(data) { 
+            if (data.success) {
+                showMessage(selectedPlayer + ' is deleted.');
+                $('#selected-player').text('');
+                switchModes('find-player');
+                loadPlayers();
+                loadTopPlayers();
+            }
+        }
+        if (sure) {
+            updatePlayer('delete', selectedPlayer, confirmation);
+        }
+        
+    }
+
+    // Adds player to a game, checks to make sure players are different
+    function addToGame() {
+        var name = $('#selected-player').text();
+        var li = ['<li>',
+                  '<input type="radio" name="player" value="'+name+'">',
+                  '<label>'+name+'</label>',
+                  '</li>'].join('\n')
+
+        if ($('#game li').length == 0) {
+            $('#game').append(li);
+            switchModes('player1-added');
+        } else {
+            var opponent = $('#game input').val();
+            if (name != opponent) {
+                $('#game').append(li);
+                switchModes('player2-added');                
+            } else {
+                showMessage('Player cannot play against him or herself.')
+            }
+
+        }
+    }
+
+    // Finds the selected winner and loser and records game on server
+    function recordGame() {
+        var winner = null;
+        var loser = null;
+        var players = $('#game input');
+        if (players[0].checked) { 
+            winner = players[0];
+            loser = players[1];
+         } else if (players[1].checked) {
+            winner = players[1];
+            loser = players[0];            
+         } else {
+            showMessage('Please select the winner.', 'error')
+            return false;
+         }
+        
+        $.getJSON($SCRIPT_ROOT + '/_record_game', 
+            {winner: winner.value, loser: loser.value},
+            function(data) { 
+                if (data.success) { 
+                    switchModes('find-player'); 
+                    loadTopPlayers();
+                }
+                else { showMessage('Oops, something went wrong, try again.', 'error'); }
+            }
+        );
+    }
+
+
+    // Gets top players from server and populates the table
+    function loadTopPlayers() {
+        $.getJSON($SCRIPT_ROOT + '/_get_top_players', 
+            {},
+            function(data) { 
+                if (data.topPlayers.length > 0) { 
+                    var rows = [];
+                    $.each(data.topPlayers, function(i, player) {
+                        var row = ['<tr>',
+                                   '<td>'+player.name+'</td>',
+                                   '<td>'+player.win_count+'</td>',
+                                   '<td>'+player.win_percent+'</td>',
+                                   '</tr>'].join('\n');
+                        rows.push(row);
+                    })
+
+                    $('#leader-board tbody').html(rows.join('\n'));
+
+                } else {
+                    $('#leader-board tbody').html('<tr><<td><i>None</i></td></tr>');
+                }
+            }
+        );
+    }
+
+    // Wires up button click events and initializes the app
+    $(document).ready(function(){
+        switchModes('find-player');
+        $('#btn-create').click(function(){editPlayer();});
+        $('#btn-search').click(function(){switchModes('find-player');});
+        $('#btn-add').click(function(){addToGame();});
+        $('#btn-edit').click(function(){
+            var name = $("#selected-player").text();
+            editPlayer(name);
+        });
+        $('#btn-delete').click(function(){deletePlayer();});
+        $('#btn-save').click(function(){savePlayer();});
+        $('#btn-record').click(function(){recordGame();});
+        $('#btn-reset').click(function(){
+            $('#game').html('');
+            switchModes('find-player');
+        });
+        $('#player-name').keypress(function(e){
+          if(e.keyCode==13)
+          $('#btn-save').click();
+        });
+
+        loadPlayers();
+        loadTopPlayers();
+    });
+
+</script>
+
+<div class="container">
+    <div class="row">
+    <div class="col-md-4">
+        <div class="project-description">
+            <h4>pool game tracker</h4>
+        </div>        
+    </div>
+    <div class="col-md-4">
+        <label id="message"></label>
+    </div>
+    </div>
+    <br/>
+    <div class="row">
+        <div class="col-md-4">
+            <div id="player-search" class="row">
+                <br/>
+                <div class="col-md-8">
+                    <input id="player-selector" class="typeahead form-control" type="text" placeholder="find player"></input>
+                </div>
+                <div class="col-md-4">
+                    <button id="btn-create" type="button" class="btn btn-default">New Player</button>
+                </div>
+            </div>
+
+            <div id="player-display">
+                <label id="selected-player"></label>
+            </div>
+            <div id="player-actions">
+                <div class="row">
+                    <div class="col-md-4">
+                        <button id="btn-add" type="button" class="btn btn-default">Add to Game</button>
+                    </div>
+                    <div class="col-md-4">
+                        <button id="btn-edit" type="button" class="btn btn-default">Update Name</button>
+                    </div>
+                    <div class="col-md-4">
+                        <button id="btn-delete" type="button" class="btn btn-default">Delete</button>
+                    </div>   
+                </div>
+                <br/>
+                <div class="row">
+                    <div class="col-md-4">
+                        <button id="btn-search" type="button" class="btn btn-default">Back</button>
+                    </div>  
+                </div>       
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="row">
+                <label class="game-actions">Choose the winner</label>
+                <ul id="game" class="list-unstyled">
+                </ul>
+            </div>
+            <div class="game-actions" class="row">
+                <br/>
+                <button id="btn-record" type="button" class="btn btn-default">Record</button>
+                <button id="btn-reset" type="button" class="btn btn-default">Reset</button>
+            </div>
+        </div> 
+        <div class="col-md-4">
+        <table id="leader-board" class="table table-striped">
+            <thead>
+              <tr>
+                <th>Player</th>
+                <th>Wins</th>
+                <th>Winning %</th>
+              </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+        </div>    
+    </div>
+
+ </div>  
+
+<!-- Modal -->
+<div id="myModal" class="modal fade" role="dialog">
+  <div class="modal-dialog">
+
+    <!-- Modal content-->
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+        <h4 class="modal-title">Edit Player Info</h4>
+      </div>
+      <div class="modal-body">
+          <input type="text" id="player-name" class="form-control" placeholder="enter name">
+          <label class="error" id="save-message"></label>
+      </div>
+      <div class="modal-footer">
+        <button type="button" id="btn-save" class="btn btn-default">Save</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div> 
+</body>
+</html>

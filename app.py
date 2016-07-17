@@ -2,11 +2,12 @@ __author__ = 'jperelshteyn'
 
 from flask import Flask, render_template, request, redirect, url_for, abort, session, jsonify
 from pymongo import MongoClient
-from twitter_monitor import twitter_manager, headline_manager
 import os
 from time import strftime, gmtime, time
-from recipe_sorter import recipe_search
 
+from recipe_sorter import recipe_search
+from twitter_monitor import twitter_manager, headline_manager
+import pool
 
 
 app = Flask(__name__)
@@ -64,7 +65,6 @@ def btnQuery_handler():
     headline = request.args.get('headline')
     if sargs == 'testmode':
         h_id, sargs, headline = '56ae3df25fad558df56c18a4', 'mosquito weapon zika', 'New Weapon to Fight Zika: The Mosquito'
-    print h_id, sargs, headline
     if h_id:
         # query twitter
         twitter_manager.query(sargs, h_id)
@@ -72,7 +72,6 @@ def btnQuery_handler():
         headline_score = headline_manager.get_s_score(headline)
         tweets = twitter_manager.read_db_tweets(h_id, sargs)
         g = twitter_manager.Graph(tweets, h_id)
-        print g.tweet_count
         return jsonify(result=g.to_json(), 
                        tweet_count=g.tweet_count, 
                        headline_score=headline_score, 
@@ -121,7 +120,7 @@ def get_ingredients():
 def btnSearch_handler():
     ingredients_csv = request.args.get('ingredients_csv')
     text_sarg = request.args.get('text_sarg')
-    recipes = recipe_search.search(ingredients_csv, text_sarg, test=False)
+    recipes = recipe_search.search(ingredients_csv, text_sarg, test=True)
     scored_recipes = recipe_search.sort_score_recipes(recipes)
     return jsonify(recipes=scored_recipes)
 
@@ -131,6 +130,57 @@ def override_url_for():
     return dict(url_for=dated_url_for)
 
 
+
+## --------------------- Pool --------------------------------------------
+
+@app.route('/pool')
+def pool_app():
+    return render_template('pool.html')
+
+@app.route('/_get_players')
+def get_players():
+    players = pool.get_players()
+    return jsonify(players=players)
+
+@app.route('/_update_player')
+def update_player():
+    action = request.args.get('action')
+    name = request.args.get('name')
+    new_name = request.args.get('newName')
+    player = pool.Player(new_name or name)
+    success = False
+    message = None
+    if action == 'save':
+        if player.is_duplicate():
+            success = False
+            message = 'name is already taken, please choose a different one'
+        else:
+            if new_name:
+                player.update(name)
+            else:
+                player.save()
+            success = True
+    elif action == 'delete':
+        success = player.delete()
+    else:
+        raise Exception('Unrecognized action: ' + action)
+    return jsonify(success=success, message=message)
+
+@app.route('/_record_game')
+def record_game():
+    winner = request.args.get('winner')
+    loser = request.args.get('loser')
+    success = pool.Game(pool.Player(winner), pool.Player(loser)).save()
+    return jsonify(success=success)
+
+@app.route('/_get_top_players')
+def get_top_players():
+    return jsonify(topPlayers=pool.get_top_winners(5))
+
+
+
+
+
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=80)
-    #app.run(debug=True)
+    #app.run(host='0.0.0.0', port=80)
+    app.run(debug=True)

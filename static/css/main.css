@@ -208,3 +208,15 @@ path {
 .point-highlight {
   fill: maroon !important;
 }
+
+.twitter-typeahead {
+  display: inline !important;
+}
+
+.error {
+  color: red;
+}
+
+input[type="radio"] {
+  margin: 4px 10px 0;
+}
