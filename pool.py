@@ -96,26 +96,45 @@ def get_players():
 def get_top_winners(top):
     conn = get_sqldb()
     curs = conn.cursor()
+    # winners = list(curs.execute('''
+    #                 with 
+    #                 win_counts(id, cnt) as
+    #                     (select winner as id, count(*) as cnt
+    #                     from games
+    #                     group by winner),
+    #                 loss_counts(id, cnt) as
+    #                     (select loser as id, count(*) as cnt
+    #                     from games
+    #                     group by loser)
+    #                 select p.name, 
+    #                         w.cnt as win_count, 
+    #                         round(100.0 * w.cnt / (w.cnt + coalesce(l.cnt, 0))) as win_percent
+    #                 from players p 
+    #                     join win_counts w on p.rowid = w.id
+    #                     left join loss_counts l on p.rowid = l.id
+    #                 where p.archived = 0
+    #                 order by win_count desc, win_percent desc
+    #                 limit ?''', 
+    #              (5,)))
     winners = list(curs.execute('''
-                    with 
-                    win_counts(id, cnt) as
+                select p.name, 
+                        w.cnt as win_count, 
+                        round(100.0 * w.cnt / (w.cnt + coalesce(l.cnt, 0))) as win_percent
+                from players p 
+                    join 
                         (select winner as id, count(*) as cnt
                         from games
-                        group by winner),
-                    loss_counts(id, cnt) as
+                        group by winner) as w 
+                    on p.rowid = w.id
+                    left join 
                         (select loser as id, count(*) as cnt
                         from games
-                        group by loser)
-                    select p.name, 
-                            w.cnt as win_count, 
-                            round(100.0 * w.cnt / (w.cnt + coalesce(l.cnt, 0))) as win_percent
-                    from players p 
-                        join win_counts w on p.rowid = w.id
-                        left join loss_counts l on p.rowid = l.id
-                    where p.archived = 0
-                    order by win_count desc, win_percent desc
-                    limit ?''', 
-                 (5,)))
+                        group by loser) as l 
+                    on p.rowid = l.id
+                where p.archived = 0
+                order by win_count desc, win_percent desc
+                limit ?''', 
+             (top,)))
     conn.close()
     return [{'name': w[0],
              'win_count': w[1],
