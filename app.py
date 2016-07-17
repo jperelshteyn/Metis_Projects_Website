@@ -140,7 +140,6 @@ def pool_app():
 @app.route('/_get_players')
 def get_players():
     players = pool.get_players()
-    print players
     return jsonify(players=players)
 
 @app.route('/_update_player')
